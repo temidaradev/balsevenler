@@ -1,0 +1,205 @@
+:root {
+  --background: #02040a; /* Deep Space Black */
+  --foreground: #e6edf3;
+  --accent: #ffae00; /* Warning Amber */
+  --accent-muted: #d29922;
+  --hazard: #ff4500; /* Disaster Red/Orange */
+  --card-bg: rgba(13, 17, 23, 0.8);
+  --card-border: rgba(48, 54, 61, 1);
+  --glass: rgba(1, 4, 9, 0.85);
+  --text-dim: #8b949e;
+  --font-geist-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Space & Atmosphere */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 50px 160px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  opacity: 0.3;
+  z-index: -1;
+  animation: drift 100s linear infinite;
+}
+
+/* Nebula Glows */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(0, 112, 243, 0.05) 0%, transparent 40%);
+  z-index: -2;
+  pointer-events: none;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 1000px 1000px; }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  border-radius: 4px; /* Industrial look */
+  padding: 2rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.3;
+}
+
+.glass-card:hover {
+  border-color: var(--accent-muted);
+  box-shadow: 0 0 20px rgba(255, 174, 0, 0.1);
+}
+
+.title-glow {
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary {
+  background: transparent;
+  color: var(--accent);
+  padding: 0.8rem 1.6rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 0 15px var(--accent);
+}
+
+.input-field {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  padding: 0.8rem 1.2rem;
+  color: #fff;
+  width: 100%;
+  font-family: monospace;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: var(--accent);
+}
+
+.hazard-badge {
+  background: rgba(255, 69, 0, 0.15);
+  color: var(--hazard);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: 1px solid var(--hazard);
+}
+
+.seismic-border {
+  border-bottom: 2px solid var(--hazard);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-outfit);
+}
+
+p {
+  color: var(--text-dim);
+}
+
+/* Glitch Effect for titles */
+.glitch {
+  position: relative;
+}
+
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -1px 0 red;
+  top: 0;
+  color: white;
+  background: var(--background);
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% { clip: rect(44px, 9999px, 56px, 0); }
+  20% { clip: rect(12px, 9999px, 30px, 0); }
+  40% { clip: rect(78px, 9999px, 92px, 0); }
+  60% { clip: rect(33px, 9999px, 45px, 0); }
+  80% { clip: rect(91px, 9999px, 100px, 0); }
+  100% { clip: rect(10px, 9999px, 20px, 0); }
+}
