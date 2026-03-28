@@ -1,9 +1,7 @@
-"use client";
+import { getArticles } from "@/app/admin/actions";
 
-import { useDevUpdates } from "@/lib/data";
-
-export default function ArticleList() {
-  const { updates } = useDevUpdates();
+export default async function ArticleList() {
+  const updates = await getArticles();
 
   if (!updates || updates.length === 0) {
     return <p style={{ color: "var(--text-dim)", fontStyle: "italic" }}>Saha raporlarının iletilmesi bekleniyor...</p>;

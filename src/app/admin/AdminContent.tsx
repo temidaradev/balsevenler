@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import { useDevUpdates, DevUpdate } from "@/lib/data";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { verifyPassword } from "./actions";
+import { verifyPassword, getArticles, addArticle, deleteArticle, DevUpdate } from "./actions";
 
 export default function AdminPage() {
   const [isLogged, setIsLogged] = useState(false);
   const [password, setPassword] = useState("");
-  const { updates, addUpdate, removeUpdate } = useDevUpdates();
-  
+  const [updates, setUpdates] = useState<DevUpdate[]>([]);
   const [newArticle, setNewArticle] = useState({ title: "", content: "" });
+
+  // Load from server on mount
+  useEffect(() => {
+    getArticles().then(setUpdates);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,15 +25,23 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddArticle = (e: React.FormEvent) => {
+  const handleAddArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     const update: DevUpdate = {
       date: new Date().toISOString().split("T")[0],
       title: newArticle.title,
       content: newArticle.content,
     };
-    addUpdate(update);
+    await addArticle(update);
+    const refreshed = await getArticles();
+    setUpdates(refreshed);
     setNewArticle({ title: "", content: "" });
+  };
+
+  const handleDelete = async (index: number) => {
+    await deleteArticle(index);
+    const refreshed = await getArticles();
+    setUpdates(refreshed);
   };
 
   if (!isLogged) {
@@ -103,7 +114,7 @@ export default function AdminPage() {
               <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>{upd.title}</h3>
               <p style={{ fontSize: "0.9rem" }}>{upd.content.substring(0, 80)}...</p>
               <button 
-                onClick={() => removeUpdate(updates.indexOf(upd))}
+                onClick={() => handleDelete(updates.indexOf(upd))}
                 style={{ 
                   position: "absolute", 
                   top: "1.5rem", 
