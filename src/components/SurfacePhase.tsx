@@ -500,7 +500,14 @@ function ColonySVG({ active }: { active: boolean }) {
 }
 
 export default function SurfacePhase({ progress, data }: Props) {
-  const [colonySteps, setColonySteps] = useState<number[]>([]);
+  const [colonySteps, setColonySteps] = useState<number[]>(() => {
+    const initialLatest = progress.get();
+    const steps = [];
+    if (initialLatest > 0.83) steps.push(1);
+    if (initialLatest > 0.86) steps.push(2);
+    if (initialLatest > 0.89) steps.push(3);
+    return steps;
+  });
 
   useMotionValueEvent(progress, "change", (latest) => {
     const steps = [];
@@ -520,6 +527,11 @@ export default function SurfacePhase({ progress, data }: Props) {
     p > 0.84 && p < 0.96 ? "auto" : ("none" as any),
   );
 
+  // Door slide effect - slower and more gradual
+  const doorTopY = useTransform(progress, [0.84, 0.88], ["0%", "-100%"]);
+  const doorBottomY = useTransform(progress, [0.84, 0.88], ["0%", "100%"]);
+  const doorOpacity = useTransform(progress, [0.84, 0.88], [1, 0]);
+
   return (
     <motion.div
       style={{
@@ -530,6 +542,68 @@ export default function SurfacePhase({ progress, data }: Props) {
         pointerEvents,
       }}
     >
+      {/* Spaceship Doors Overlay */}
+      <motion.div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "50%",
+          background: "linear-gradient(to bottom, #111, #222)",
+          borderBottom: "4px solid #ffae00",
+          zIndex: 50,
+          y: doorTopY,
+          opacity: doorOpacity,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-end",
+          paddingBottom: "1rem",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "var(--font-display)",
+            color: "rgba(255,174,0,0.4)",
+            fontSize: "0.5rem",
+            letterSpacing: "0.5em",
+          }}
+        >
+          HATCH SECURED
+        </p>
+      </motion.div>
+      <motion.div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "50%",
+          background: "linear-gradient(to top, #111, #222)",
+          borderTop: "4px solid #ffae00",
+          zIndex: 50,
+          y: doorBottomY,
+          opacity: doorOpacity,
+          boxShadow: "0 -10px 30px rgba(0,0,0,0.8)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          paddingTop: "1rem",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "var(--font-display)",
+            color: "rgba(255,174,0,0.4)",
+            fontSize: "0.5rem",
+            letterSpacing: "0.5em",
+          }}
+        >
+          PRESSURIZING
+        </p>
+      </motion.div>
+
       {/* Moon surface - use real image as background */}
       <Image
         src="/assets/moon_surface.png"

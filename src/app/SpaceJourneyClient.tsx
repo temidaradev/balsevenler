@@ -172,7 +172,7 @@ function SceneCoasting({
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            TRANSLUNAR INJECTION COMPLETE
+            AY'A TRANSFER TAMAMLANDI
           </p>
           <p
             style={{
@@ -183,7 +183,7 @@ function SceneCoasting({
               marginTop: "0.5rem",
             }}
           >
-            COASTING TO MOON
+            AY'A DOĞRU İLERLENİYOR
           </p>
         </div>
       </motion.div>
@@ -350,7 +350,6 @@ export default function SpaceJourneyClient({
   articles?: DevUpdate[];
 }) {
   const [mounted, setMounted] = useState(false);
-  const [isReady, setIsReady] = useState(false);
   const [isJumping, setIsJumping] = useState(false);
   const [stars, setStars] = useState<Star[]>([]);
   const [hudOpen, setHudOpen] = useState(false);
@@ -366,6 +365,7 @@ export default function SpaceJourneyClient({
     if (savedNickname) {
       setIsJumping(true);
       if (lenis) {
+        lenis.stop();
         lenis.scrollTo("bottom", { immediate: true });
       } else {
         window.scrollTo({
@@ -375,14 +375,27 @@ export default function SpaceJourneyClient({
         });
       }
     } else {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true });
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      }
     }
 
     const timer = setTimeout(() => {
-      if (savedNickname && !lenis) {
-        window.scrollTo(0, document.body.scrollHeight);
-      } else if (!savedNickname) {
-        window.scrollTo(0, 0);
+      if (savedNickname) {
+        if (lenis) {
+          lenis.scrollTo("bottom", { immediate: true });
+          lenis.start();
+        } else {
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+      } else {
+        if (lenis) {
+          lenis.scrollTo(0, { immediate: true });
+        } else {
+          window.scrollTo(0, 0);
+        }
       }
       setMounted(true);
       setStars(generateStars(300));
@@ -390,17 +403,6 @@ export default function SpaceJourneyClient({
 
     return () => clearTimeout(timer);
   }, [lenis]);
-
-  // Only set ready after mount and potential jump settling
-  useEffect(() => {
-    if (mounted) {
-      const readyTimer = setTimeout(
-        () => setIsReady(true),
-        isJumping ? 800 : 400,
-      );
-      return () => clearTimeout(readyTimer);
-    }
-  }, [mounted, isJumping]);
 
   // Scroll progress (already smoothed by Lenis)
   const { scrollYProgress } = useScroll();
@@ -411,11 +413,6 @@ export default function SpaceJourneyClient({
   const startPointerEvents = useTransform(smoothProgress, (p) =>
     p > 0.02 ? "none" : ("auto" as any),
   );
-
-  if (!isReady)
-    return (
-      <div style={{ width: "100%", height: "100vh", background: "#000" }} />
-    );
 
   return (
     <motion.div
