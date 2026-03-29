@@ -94,7 +94,7 @@ function FlagAsset({ active }: { active: boolean }) {
           src="/assets/turkish-flag.png"
           alt="Turkish Flag"
           fill
-          style={{ objectFit: "cover", transform: "scale(1.35)" }}
+          style={{ objectFit: "cover" }}
           priority
         />
         {/* Subtle cloth texture overlay */}
