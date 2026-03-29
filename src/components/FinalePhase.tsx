@@ -1,0 +1,134 @@
+"use client";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+
+interface Props {
+  onComplete: () => void;
+}
+
+export default function FinalePhase({ onComplete }: Props) {
+  const [name, setName] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [selectedField, setSelectedField] = useState<string | null>(null);
+
+  const fields = [
+    { label: "MÜHENDİSLİK", icon: "🔧", color: "#ffae00" },
+    { label: "BİLİM", icon: "🔬", color: "#00f0ff" },
+    { label: "TASARIM", icon: "🎨", color: "#ff6b9d" },
+    { label: "STRATEJİ", icon: "♟️", color: "#a78bfa" },
+  ];
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}
+      style={{ position: "absolute", inset: 0, zIndex: 100, background: "#000",
+        display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+
+      {/* Background stars */}
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+        {Array.from({ length: 150 }, (_, i) => (
+          <div key={`finale-star-${i}`} className="star star--twinkle" style={{
+            left: `${((i * 7 + 13) * 17) % 100}%`, top: `${((i * 11 + 7) * 23) % 100}%`,
+            width: `${(i % 3) + 1}px`, height: `${(i % 3) + 1}px`,
+            "--dur": `${3 + (i % 5)}s`, "--delay": `${(i % 7) * 0.5}s`, "--base-opacity": 0.2 + (i % 4) * 0.1,
+          } as React.CSSProperties} />
+        ))}
+      </div>
+
+      {/* Earth using real image */}
+      <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 2 }}
+        style={{ position: "relative", width: "250px", height: "250px", marginBottom: "2.5rem" }}>
+        <motion.div animate={{ scale: [1, 1.03, 1] }}
+          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+          style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
+            boxShadow: "0 0 60px rgba(70,130,230,0.35), 0 0 120px rgba(70,130,230,0.15)" }}>
+          <Image src="/assets/moon_surface.png" alt="Earth" fill
+            style={{ objectFit: "cover", objectPosition: "center 20%",
+              filter: "hue-rotate(180deg) saturate(1.5) brightness(1.2)" }} />
+        </motion.div>
+        {/* Atmosphere glow */}
+        <div style={{ position: "absolute", inset: "-12px", borderRadius: "50%",
+          background: "radial-gradient(circle, transparent 55%, rgba(100,160,255,0.12) 75%, transparent 100%)",
+          pointerEvents: "none" }} />
+      </motion.div>
+
+      {/* Name input */}
+      {!submitted ? (
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}>
+          <p style={{ fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.4em",
+            color: "var(--accent)", marginBottom: "1.5rem", textTransform: "uppercase" }}>
+            Görev Kaydı
+          </p>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <input value={name} onChange={e => setName(e.target.value)}
+              placeholder="Adınızı girin..."
+              onKeyDown={e => { if (e.key === "Enter" && name.trim()) setSubmitted(true); }}
+              style={{ padding: "0.9rem 1.5rem", background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff",
+                fontFamily: "var(--font-mono)", fontSize: "0.9rem", width: "300px", outline: "none",
+                transition: "border-color 0.3s" }}
+              onFocus={e => e.target.style.borderColor = "var(--accent)"}
+              onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.15)"} />
+            <button onClick={() => name.trim() && setSubmitted(true)} disabled={!name.trim()}
+              style={{ padding: "0.9rem 1.8rem", background: name.trim() ? "var(--accent)" : "#333",
+                border: "none", borderRadius: "8px", color: name.trim() ? "#000" : "#666",
+                fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.1em",
+                transition: "all 0.3s" }}>
+              KAYDET
+            </button>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          style={{ maxWidth: "700px", padding: "0 2rem" }}>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.2 }}
+            style={{ fontFamily: "var(--font-display)", fontSize: "0.65rem", letterSpacing: "0.4em",
+              color: "var(--accent)", marginBottom: "0.5rem" }}>
+            GÖREVLİ
+          </motion.p>
+          <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            style={{ fontFamily: "var(--font-outfit)", fontSize: "1.8rem", marginBottom: "2rem",
+              background: "linear-gradient(135deg, #fff, var(--accent))", WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent" }}>
+            {name}
+          </motion.h2>
+
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+            style={{ fontFamily: "var(--font-mono)", fontSize: "0.88rem", lineHeight: 1.8,
+              color: "rgba(255,255,255,0.8)", marginBottom: "3rem" }}>
+            Ay&apos;a giden yol, mühendislikten, felsefeden ve cesaretten geçer.
+            Bu hikayenin bir sonraki bölümünü{" "}
+            <span style={{ color: "var(--accent)", fontWeight: 700 }}>sen</span> yazabilirsin.
+            Hangi alanda uzmanlaşmak istersin?
+          </motion.p>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }}
+            style={{ display: "flex", gap: "1.2rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {fields.map(f => (
+              <motion.button key={f.label} whileHover={{ scale: 1.05, y: -3 }} whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedField(f.label)}
+                className="finale-option"
+                style={{
+                  borderColor: selectedField === f.label ? f.color : undefined,
+                  color: selectedField === f.label ? f.color : undefined,
+                  boxShadow: selectedField === f.label ? `0 0 30px ${f.color}33` : undefined,
+                }}>
+                <span style={{ marginRight: "0.5rem" }}>{f.icon}</span>
+                <span style={{ position: "relative", zIndex: 1 }}>{f.label}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+
+          {selectedField && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+              style={{ marginTop: "2rem", fontFamily: "var(--font-mono)", fontSize: "0.82rem",
+                color: "rgba(255,255,255,0.5)" }}>
+              {name}, {selectedField.toLowerCase()} alanında seni büyük şeyler bekliyor. 🚀
+            </motion.p>
+          )}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
