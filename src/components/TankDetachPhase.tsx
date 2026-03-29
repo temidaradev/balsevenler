@@ -2,11 +2,7 @@
 import React, { useMemo } from "react";
 import { motion, AnimatePresence, useTransform, MotionValue } from "framer-motion";
 
-const TEXTS = [
-  "Yapılan iş ne olursa olsun onun zorluğu sadece yapan bilir. 400.000 kişinin ortak emeği olan Saturn V roketi o güne kadar üretilmiş en güçlü makineydi ve her saniye 13 ton yakıt tüketiyordu.",
-  "Aya gitmek denize atlamaya benzemez, gelişigüzel yapılmaz. Dünyanın dönmesini bir sapan gibi kullanarak boşluğa fırlatılırsınız. E tabi uzayda sonsuza kadar mahsur kalmak istemiyorsan…",
-  "Şu an ayırdığımız bu devasa tanklar, Dünya'nın kütleçekiminden kurtulmamızı sağlayan fedailerdir. Ay'a varacak olan asıl parça, toplam roketin ağırlığının sadece %1'inden bile azdır.",
-];
+import { PhaseContent } from "@/app/admin/actions";
 
 const TELEMETRY_DATA = [
   { label: "Pres.", value: "24.8 PSI", status: "NOMINAL" },
@@ -17,6 +13,7 @@ const TELEMETRY_DATA = [
 
 interface Props {
   progress: MotionValue<number>;
+  data: PhaseContent["tankDetach"];
 }
 
 function Gauge({ label, progress, isDone }: { label: string; progress: MotionValue<number>; isDone: boolean }) {
@@ -65,27 +62,27 @@ function Gauge({ label, progress, isDone }: { label: string; progress: MotionVal
   );
 }
 
-export default function TankDetachPhase({ progress }: Props) {
-  // Phase visibility - widened to 0.32 - 0.54
-  const opacity = useTransform(progress, [0.30, 0.32, 0.54, 0.56], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.30 && p < 0.56 ? "auto" : ("none" as any));
+export default function TankDetachPhase({ progress, data }: Props) {
+  // Phase visibility - crossfade with StarsNebulaPhase
+  const opacity = useTransform(progress, [0.28, 0.30, 0.46, 0.48], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.28 && p < 0.48 ? "auto" : ("none" as any));
 
-  // Individual stage progress with plateaus
-  // Stage 1: 0.34 -> 0.40 (6% scroll)
-  const stage1Progress = useTransform(progress, [0.34, 0.40], [0, 1]);
-  // Stage 2: 0.41 -> 0.47 (6% scroll)
-  const stage2Progress = useTransform(progress, [0.41, 0.47], [1e-5, 1]); // Small offset to avoid 0 flickering
-  // Stage 3: 0.48 -> 0.54 (6% scroll)
-  const stage3Progress = useTransform(progress, [0.48, 0.54], [1e-5, 1]);
+  // Compress completion before 0.46 so it doesn't overlap with StarsNebulaPhase
+  // Stage 1: 0.30 -> 0.35 (5% scroll)
+  const stage1Progress = useTransform(progress, [0.30, 0.35], [0, 1]);
+  // Stage 2: 0.36 -> 0.40 (4% scroll)
+  const stage2Progress = useTransform(progress, [0.36, 0.40], [1e-5, 1]);
+  // Stage 3: 0.41 -> 0.45 (4% scroll)
+  const stage3Progress = useTransform(progress, [0.41, 0.45], [1e-5, 1]);
 
-  const isStage1Done = useTransform(progress, p => p >= 0.40);
-  const isStage2Done = useTransform(progress, p => p >= 0.47);
-  const isStage3Done = useTransform(progress, p => p >= 0.54);
+  const isStage1Done = useTransform(progress, p => p >= 0.35);
+  const isStage2Done = useTransform(progress, p => p >= 0.40);
+  const isStage3Done = useTransform(progress, p => p >= 0.45);
 
   // Determine current active text based on progress
   const activeTextIndex = useTransform(progress, (p) => {
-    if (p < 0.41) return 0;
-    if (p < 0.48) return 1;
+    if (p < 0.36) return 0;
+    if (p < 0.41) return 1;
     return 2;
   });
 
@@ -133,7 +130,7 @@ export default function TankDetachPhase({ progress }: Props) {
           </div>
 
           <div style={{ width: "100%", maxWidth: "600px", minHeight: "140px", position: "relative" }}>
-            {TEXTS.map((text, i) => (
+            {[data.text1, data.text2, data.text3].map((text, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0 }}
@@ -146,7 +143,7 @@ export default function TankDetachPhase({ progress }: Props) {
               >
                 <div className="info-box" style={{ maxWidth: "100%", background: "rgba(8, 12, 20, 0.4)", border: "none", boxShadow: "none" }}>
                   <p className="info-box__text" style={{ fontSize: "0.9rem", textAlign: "center", fontStyle: "italic" }}>
-                    "{text}"
+                    &quot;{text}&quot;
                   </p>
                 </div>
               </motion.div>

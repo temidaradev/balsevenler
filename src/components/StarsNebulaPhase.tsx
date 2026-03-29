@@ -2,47 +2,49 @@
 import { useState } from "react";
 import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
 
-const STAR1_TEXT = "Aya gidildikçe sadece aradaki mesafe artmaz. Ayrıca aradaki zaman da artar. Aya gittikçe zaman minik farklarla daha yavaş akmaya başlar… Gençleşmenin sırrı ;)";
+import { PhaseContent } from "@/app/admin/actions";
 
-const STAR2_TEXT = `Bir küpün içindeki tüm atomları boşaltırsan, geriye 'hiçlik' kaldığını sanırsın. Oysa yanılıyorsun. Maddenin bittiği yerde Uzay-Zamanın Dokusu başlar.
+// Deterministic pseudo-random sequence for organic chaos without hydration mismatch
+const pseudoRandom = (seed: number) => {
+  const x = Math.sin(seed * 9999.9999) * 10000;
+  return x - Math.floor(x);
+};
 
-Nesneleri nesne kılan şey sadece içlerindeki atomlar değil, o atomların içinde yüzdüğü bu esnek dokudur. Eğer evrendeki tüm yıldızları ve gezegenleri yok etseydin, geriye bomboş bir karanlık değil; gerilen, bükülen ve dalgalanan bir 'mekan kumaşı' kalırdı.
-
-Kuantum Boşluk Çalkantıları nedeniyle, en boş sandığın yerde bile atom altı parçacıklar bir anlığına var olup yok olmaya devam eder. Yani evrende gerçek bir 'hiçlik' yoktur; sadece henüz dokunmadığın bir varlık formu vardır.`;
-
-// Deterministic positions
-const BG_STARS = Array.from({ length: 80 }, (_, i) => ({
-  x: ((i * 19 + 7) * 17) % 100,
-  y: ((i * 13 + 11) * 23) % 100,
-  size: (i % 3) * 0.5 + 0.5,
-  dur: 3 + (i % 5),
-  delay: (i % 8) * 0.5,
+// Scatter stars chaotically using pseudo-random distribution
+const BG_STARS = Array.from({ length: 150 }, (_, i) => ({
+  x: pseudoRandom(i) * 100,
+  y: pseudoRandom(i + 1000) * 100,
+  size: pseudoRandom(i + 2000) * 1.5 + 0.5,
+  dur: 3 + pseudoRandom(i + 3000) * 4,
+  delay: pseudoRandom(i + 4000) * 2,
+  opacity: pseudoRandom(i + 5000) * 0.6 + 0.2,
 }));
 
-const DUST_PARTICLES_WARM = Array.from({ length: 15 }, (_, i) => ({
-  left: 30 + ((i * 17) % 40),
-  top: 20 + ((i * 23) % 60),
-  size: 20 + ((i * 13) % 80),
-  dur: 10 + ((i * 7) % 15),
-  delay: (i % 5),
-  dx: ((i * 31) % 200) - 100,
-  dy: ((i * 37) % 200) - 100,
-  opacity: 0.3 + ((i * 11) % 4) * 0.1,
+const DUST_PARTICLES_WARM = Array.from({ length: 25 }, (_, i) => ({
+  left: pseudoRandom(i + 5000) * 60 + 20, 
+  top: pseudoRandom(i + 6000) * 60 + 20,
+  size: pseudoRandom(i + 7000) * 60 + 20,
+  dur: 10 + pseudoRandom(i + 8000) * 8,
+  delay: pseudoRandom(i + 9000) * 5,
+  dx: pseudoRandom(i + 10000) * 200 - 100,
+  dy: pseudoRandom(i + 11000) * 200 - 100,
+  opacity: 0.2 + pseudoRandom(i + 12000) * 0.3,
 }));
 
-const DUST_PARTICLES_COOL = Array.from({ length: 20 }, (_, i) => ({
-  left: 25 + ((i * 19) % 50),
-  top: 15 + ((i * 29) % 70),
-  size: 25 + ((i * 11) % 80),
-  dur: 12 + ((i * 7) % 15),
-  delay: (i % 6),
-  dx: ((i * 37) % 200) - 100,
-  dy: ((i * 31) % 200) - 100,
-  opacity: 0.3 + ((i * 13) % 4) * 0.1,
+const DUST_PARTICLES_COOL = Array.from({ length: 30 }, (_, i) => ({
+  left: pseudoRandom(i + 13000) * 70 + 15,
+  top: pseudoRandom(i + 14000) * 70 + 15,
+  size: pseudoRandom(i + 15000) * 70 + 30,
+  dur: 12 + pseudoRandom(i + 16000) * 10,
+  delay: pseudoRandom(i + 17000) * 6,
+  dx: pseudoRandom(i + 18000) * 200 - 100,
+  dy: pseudoRandom(i + 19000) * 200 - 100,
+  opacity: 0.2 + pseudoRandom(i + 20000) * 0.3,
 }));
 
 interface Props {
   progress: MotionValue<number>;
+  data: PhaseContent["nebula"];
 }
 
 function DustCloud({ particles, color }: { particles: typeof DUST_PARTICLES_WARM; color: string }) {
@@ -62,30 +64,31 @@ function DustCloud({ particles, color }: { particles: typeof DUST_PARTICLES_WARM
   );
 }
 
-export default function StarsNebulaPhase({ progress }: Props) {
+export default function StarsNebulaPhase({ progress, data }: Props) {
   const [scanned, setScanned] = useState<number[]>([]);
 
-  // Convert global scroll progress (0.50 -> 0.65) into "scanned" steps
+  // Widened: star reveals now have more scroll distance between them
   useMotionValueEvent(progress, "change", (latest) => {
     const newScanned = [];
-    if (latest > 0.55) newScanned.push(1);
-    if (latest > 0.60) newScanned.push(2);
+    if (latest > 0.54) newScanned.push(1);
+    if (latest > 0.61) newScanned.push(2);
     setScanned(newScanned);
   });
 
-  const opacity = useTransform(progress, [0.48, 0.50, 0.65, 0.67], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.48 && p < 0.67 ? "auto" : ("none" as any));
+  // Widened from 0.48-0.67 to 0.48-0.70
+  const opacity = useTransform(progress, [0.46, 0.48, 0.68, 0.70], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.46 && p < 0.70 ? "auto" : ("none" as any));
 
   return (
     <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, background: "#000", opacity, pointerEvents }}>
 
       {/* Background stars */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.4 }}>
+      <div style={{ position: "absolute", inset: 0, opacity: 0.5 }}>
         {BG_STARS.map((s, i) => (
           <div key={`neb-star-${i}`} className="star star--twinkle" style={{
             left: `${s.x}%`, top: `${s.y}%`,
             width: `${s.size}px`, height: `${s.size}px`,
-            "--dur": `${s.dur}s`, "--delay": `${s.delay}s`, "--base-opacity": 0.4,
+            "--dur": `${s.dur}s`, "--delay": `${s.delay}s`, "--base-opacity": s.opacity,
           } as React.CSSProperties} />
         ))}
       </div>
@@ -110,10 +113,10 @@ export default function StarsNebulaPhase({ progress }: Props) {
         GEMİ PENCERESİ — YILDIZ GÖZLEM (BİLGİLERİ TARAMAK İÇİN KAYDIR)
       </motion.p>
 
-      {/* Star 1 Glow Target (Fades as it gets scanned) */}
+      {/* Star 1 Glow Target - widened visibility */}
       <motion.div
         style={{ position: "absolute", left: "25%", top: "35%", width: "80px", height: "80px",
-          opacity: useTransform(progress, [0.50, 0.52, 0.55], [0, 1, 0]), scale: useTransform(progress, [0.50, 0.55], [0.8, 1.2]) }}
+          opacity: useTransform(progress, [0.49, 0.51, 0.54], [0, 1, 0]), scale: useTransform(progress, [0.49, 0.54], [0.8, 1.2]) }}
       >
         <motion.div className="nebula-star__glow"
           animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
@@ -130,16 +133,16 @@ export default function StarsNebulaPhase({ progress }: Props) {
             <div className="nebula-card" style={{ borderColor: "rgba(255,174,0,0.2)" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px",
                 background: "linear-gradient(90deg, transparent, #ffae00, transparent)" }} />
-              <p className="nebula-card__text">{STAR1_TEXT}</p>
+              <p className="nebula-card__text" style={{ whiteSpace: "pre-line" }}>{data.star1}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Star 2 Glow Target */}
+      {/* Star 2 Glow Target - widened */}
       <motion.div
         style={{ position: "absolute", right: "20%", top: "45%", width: "100px", height: "100px",
-          opacity: useTransform(progress, [0.55, 0.58, 0.60], [0, 1, 0]), scale: useTransform(progress, [0.55, 0.60], [0.8, 1.2]) }}
+          opacity: useTransform(progress, [0.56, 0.58, 0.61], [0, 1, 0]), scale: useTransform(progress, [0.56, 0.61], [0.8, 1.2]) }}
       >
         <motion.div className="nebula-star__glow"
           animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
@@ -154,7 +157,7 @@ export default function StarsNebulaPhase({ progress }: Props) {
             animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}
             style={{ position: "absolute", right: "8%", top: "15%", width: "440px", zIndex: 60 }}>
             <div className="nebula-card">
-              <p className="nebula-card__text" style={{ whiteSpace: "pre-line" }}>{STAR2_TEXT}</p>
+              <p className="nebula-card__text" style={{ whiteSpace: "pre-line" }}>{data.star2}</p>
             </div>
           </motion.div>
         )}

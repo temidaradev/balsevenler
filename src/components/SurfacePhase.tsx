@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
 import Image from "next/image";
-
-const SURFACE_TEXT = "Ay'a dikilen ilk bayraklar Apollo'nun egzozundan dolayı yanıp kül oldu. Lakin ayak izleri hala orada. O gün Ay'a ulaşılabileceğini kanıtlamışken şimdi oraya konaklamaya gidiyoruz ;)";
+import { PhaseContent } from "@/app/admin/actions";
 
 interface Props {
   progress: MotionValue<number>;
+  data: PhaseContent["surface"];
 }
 
 function FlagSVG({ active }: { active: boolean }) {
@@ -122,14 +122,14 @@ function ColonySVG({ active }: { active: boolean }) {
   );
 }
 
-export default function SurfacePhase({ progress }: Props) {
+export default function SurfacePhase({ progress, data }: Props) {
   const [colonySteps, setColonySteps] = useState<number[]>([]);
 
   useMotionValueEvent(progress, "change", (latest) => {
     const steps = [];
-    if (latest > 0.83) steps.push(1);
+    if (latest > 0.82) steps.push(1);
     if (latest > 0.87) steps.push(2);
-    if (latest > 0.91) steps.push(3);
+    if (latest > 0.92) steps.push(3);
     setColonySteps(steps);
   });
 
@@ -151,7 +151,7 @@ export default function SurfacePhase({ progress }: Props) {
       <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1, duration: 1 }}
         style={{ position: "absolute", top: "6%", left: "4%", width: "440px", zIndex: 20 }}>
         <div className="info-box">
-          <p className="info-box__text">{SURFACE_TEXT}</p>
+          <p className="info-box__text">{data.text}</p>
         </div>
       </motion.div>
 
