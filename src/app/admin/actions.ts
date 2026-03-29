@@ -30,6 +30,7 @@ export interface DevUpdate {
   date: string;
   title: string;
   content: string;
+  category?: string;
 }
 
 const KEY = "balsevenler_articles";
@@ -113,6 +114,7 @@ export interface PhaseContent {
   tankDetach: { text1: string; text2: string; text3: string; };
   nebula: { star1: string; star2: string; };
   surface: { text: string; };
+  finale: { text: string; };
   customItems?: CustomPhaseItem[];
 }
 
@@ -135,6 +137,9 @@ const DEFAULT_PHASE_CONTENT: PhaseContent = {
   },
   surface: {
     text: "Ay'a dikilen ilk bayraklar Apollo'nun egzozundan dolayı yanıp kül oldu. Lakin ayak izleri hala orada. O gün Ay'a ulaşılabileceğini kanıtlamışken şimdi oraya konaklamaya gidiyoruz ;)"
+  },
+  finale: {
+    text: "Ay'a giden yol, mühendislikten, felsefeden ve cesaretten geçer.\nBu hikayenin bir sonraki bölümünü sen yazabilirsin.\nHangi alanda uzmanlaşmak istersin?"
   },
   customItems: []
 };

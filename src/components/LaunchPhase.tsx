@@ -90,7 +90,7 @@ export default function LaunchPhase({ scrollProgress }: Props) {
           >
             {/* Rocket image */}
             <div style={{ position: "relative", width: "240px", height: "480px" }}>
-              <Image src="/assets/rocket.png" alt="Rocket" fill
+              <Image src="/assets/rocket.png" alt="Rocket" fill sizes="(max-width: 768px) 100vw, 240px"
                 style={{ objectFit: "contain", objectPosition: "center bottom", filter: "drop-shadow(0 5px 20px rgba(0,0,0,0.3))" }} priority />
             </div>
 

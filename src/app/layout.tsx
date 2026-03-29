@@ -16,6 +16,25 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Uzay Yolculuğu | Ay'a Giden Yol",
   description: "İnteraktif bir uzay yolculuğu deneyimi. Roket fırlatmasından Ay'a inişe kadar uzayın derinliklerini keşfedin.",
+  keywords: ["uzay", "yolculuk", "ay", "roket", "astronomi", "balsevenler", "interaktif", "mars", "yıldızlar"],
+  authors: [{ name: "Balsevenler" }],
+  creator: "Balsevenler",
+  publisher: "Balsevenler",
+  robots: "index, follow",
+  openGraph: {
+    title: "Uzay Yolculuğu | Ay'a Giden Yol",
+    description: "İnteraktif bir uzay yolculuğu deneyimi. Roket fırlatmasından Ay'a inişe kadar uzayın derinliklerini keşfedin.",
+    type: "website",
+    locale: "tr_TR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Uzay Yolculuğu | Ay'a Giden Yol",
+    description: "İnteraktif bir uzay yolculuğu deneyimi.",
+  },
+  alternates: {
+    canonical: "https://balsevenler.com",
+  }
 };
 
 export default function RootLayout({
@@ -26,6 +45,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${outfit.variable} ${inter.variable}`}>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `history.scrollRestoration = "manual"` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />

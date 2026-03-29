@@ -139,13 +139,13 @@ function ColonySVG({ active }: { active: boolean }) {
 
       {/* Main Dome (Central) */}
       <motion.path d="M 60 130 C 60 40, 180 40, 180 130 Z"
-        fill={active ? "rgba(180,210,255,0.15)" : "rgba(50,50,50,0.15)"}
+        fill={active ? "rgba(180,210,255,0.6)" : "rgba(50,50,50,0.15)"}
         stroke={active ? "#7ec8e3" : "#444"} strokeWidth="2"
         initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} />
       
       {/* Secondary Dome (Right) */}
       <motion.path d="M 190 130 C 190 80, 260 80, 260 130 Z"
-        fill={active ? "rgba(160,200,255,0.1)" : "rgba(40,40,40,0.1)"}
+        fill={active ? "rgba(160,200,255,0.6)" : "rgba(40,40,40,0.1)"}
         stroke={active ? "#5a9ec8" : "#444"} strokeWidth="1.5" />
 
       {/* Tertiary Module (Left) */}
@@ -213,9 +213,9 @@ export default function SurfacePhase({ progress, data }: Props) {
 
   useMotionValueEvent(progress, "change", (latest) => {
     const steps = [];
-    if (latest > 0.86) steps.push(1);
-    if (latest > 0.90) steps.push(2);
-    if (latest > 0.94) steps.push(3);
+    if (latest > 0.83) steps.push(1);
+    if (latest > 0.86) steps.push(2);
+    if (latest > 0.89) steps.push(3);
     setColonySteps(steps);
   });
 
@@ -227,7 +227,7 @@ export default function SurfacePhase({ progress, data }: Props) {
     <motion.div style={{ position: "absolute", inset: 0, zIndex: 10, opacity, pointerEvents }}>
 
       {/* Moon surface - use real image as background */}
-      <Image src="/assets/moon_surface.png" alt="Moon Surface" fill
+      <Image src="/assets/moon_surface.png" alt="Moon Surface" fill sizes="100vw"
         style={{ objectFit: "cover", objectPosition: "center" }} priority />
       
       {/* Darken overlay for readability */}
@@ -249,9 +249,10 @@ export default function SurfacePhase({ progress, data }: Props) {
 
         {/* Flag */}
         <div className="silhouette">
-          <motion.div className="silhouette__shape" style={{ opacity: colonySteps.includes(1) ? 1 : 0.6 }}
+          <motion.div className="silhouette__shape"
+            initial={{ opacity: 0.6 }}
             animate={colonySteps.includes(1) ? { opacity: 1 } : { opacity: [0.4, 0.7, 0.4] }}
-            transition={colonySteps.includes(1) ? {} : { repeat: Infinity, duration: 2 }}>
+            transition={colonySteps.includes(1) ? { duration: 0.5 } : { repeat: Infinity, duration: 2 }}>
             <FlagSVG active={colonySteps.includes(1)} />
           </motion.div>
           <p className="silhouette__label">BAYRAK</p>
@@ -260,23 +261,23 @@ export default function SurfacePhase({ progress, data }: Props) {
         {/* Rover */}
         <div className="silhouette">
           <motion.div className="silhouette__shape"
-            style={{ opacity: colonySteps.includes(2) ? 1 : colonySteps.includes(1) ? 0.6 : 0.4 }}
-            animate={!colonySteps.includes(2) && colonySteps.includes(1) ? { opacity: [0.4, 0.7, 0.4] } : {}}
-            transition={{ repeat: Infinity, duration: 2 }}>
+            initial={{ opacity: 0.4 }}
+            animate={colonySteps.includes(2) ? { opacity: 1 } : colonySteps.includes(1) ? { opacity: [0.4, 0.7, 0.4] } : { opacity: 0.4 }}
+            transition={colonySteps.includes(2) ? { duration: 0.5 } : { repeat: Infinity, duration: 2 }}>
             <RoverSVG active={colonySteps.includes(2)} />
           </motion.div>
-          <p className="silhouette__label">ROVER (AŞAĞI KAYDIR)</p>
+          <p className="silhouette__label">{colonySteps.includes(2) ? "ROVER" : "ROVER (AŞAĞI KAYDIR)"}</p>
         </div>
 
         {/* Colony */}
         <div className="silhouette">
           <motion.div className="silhouette__shape"
-            style={{ opacity: colonySteps.includes(3) ? 1 : colonySteps.includes(2) ? 0.6 : 0.4 }}
-            animate={!colonySteps.includes(3) && colonySteps.includes(2) ? { opacity: [0.4, 0.7, 0.4] } : {}}
-            transition={{ repeat: Infinity, duration: 2 }}>
+            initial={{ opacity: 0.4 }}
+            animate={colonySteps.includes(3) ? { opacity: 1 } : colonySteps.includes(2) ? { opacity: [0.4, 0.7, 0.4] } : { opacity: 0.4 }}
+            transition={colonySteps.includes(3) ? { duration: 0.5 } : { repeat: Infinity, duration: 2 }}>
             <ColonySVG active={colonySteps.includes(3)} />
           </motion.div>
-          <p className="silhouette__label">KOLONİ (AŞAĞI KAYDIR)</p>
+          <p className="silhouette__label">{colonySteps.includes(3) ? "KOLONİ" : "KOLONİ (AŞAĞI KAYDIR)"}</p>
         </div>
       </motion.div>
     </motion.div>

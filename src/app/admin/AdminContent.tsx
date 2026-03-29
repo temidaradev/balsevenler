@@ -40,12 +40,13 @@ export default function AdminPage() {
     tankDetach: { text1: "", text2: "", text3: "" },
     nebula: { star1: "", star2: "" },
     surface: { text: "" },
+    finale: { text: "" },
     customItems: []
   });
   const [activeTab, setActiveTab] = useState<"reports" | "phases">("reports");
-  const [newArticle, setNewArticle] = useState({ title: "", content: "" });
+  const [newArticle, setNewArticle] = useState({ title: "", content: "", category: "genel" });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", content: "", date: "" });
+  const [editForm, setEditForm] = useState({ title: "", content: "", date: "", category: "genel" });
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,11 +78,12 @@ export default function AdminPage() {
       date: new Date().toISOString().split("T")[0],
       title: newArticle.title,
       content: newArticle.content,
+      category: newArticle.category,
     };
     await addArticle(update);
     const refreshed = await getArticles();
     setUpdates(refreshed);
-    setNewArticle({ title: "", content: "" });
+    setNewArticle({ title: "", content: "", category: "genel" });
     setIsSubmitting(false);
     showToast("Rapor başarıyla yayınlandı");
   };
@@ -89,7 +91,7 @@ export default function AdminPage() {
   const handleStartEdit = (index: number) => {
     const article = updates[index];
     setEditingIndex(index);
-    setEditForm({ title: article.title, content: article.content, date: article.date });
+    setEditForm({ title: article.title, content: article.content, date: article.date, category: article.category || "genel" });
   };
 
   const handleSaveEdit = async () => {
@@ -99,6 +101,7 @@ export default function AdminPage() {
       date: editForm.date,
       title: editForm.title,
       content: editForm.content,
+      category: editForm.category,
     });
     const refreshed = await getArticles();
     setUpdates(refreshed);
@@ -401,6 +404,28 @@ export default function AdminPage() {
               <form onSubmit={handleAddArticle} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div>
                   <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "var(--font-display)" }}>
+                    Kategori
+                  </label>
+                  <select
+                    value={newArticle.category}
+                    onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
+                    style={{
+                      width: "100%", padding: "0.9rem 1.2rem",
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "8px", color: "#fff",
+                      fontFamily: "var(--font-mono)", fontSize: "0.85rem",
+                      outline: "none", transition: "all 0.3s", appearance: "none"
+                    }}
+                  >
+                    <option value="genel" style={{ background: "#111" }}>Genel Rapor (Ana Akış)</option>
+                    <option value="astrofizik" style={{ background: "#111" }}>Astrofizik Bölümü</option>
+                    <option value="uzay-madenciligi" style={{ background: "#111" }}>Uzay Madenciliği Bölümü</option>
+                    <option value="uzay-tibbi" style={{ background: "#111" }}>Uzay Tıbbı Bölümü</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "var(--font-display)" }}>
                     Başlık
                   </label>
                   <input
@@ -531,6 +556,22 @@ export default function AdminPage() {
                             fontFamily: "var(--font-mono)", fontSize: "0.9rem", outline: "none",
                           }}
                         />
+                        <select
+                          value={editForm.category}
+                          onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                          style={{
+                            width: "100%", padding: "0.8rem",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,174,0,0.2)",
+                            borderRadius: "6px", color: "#fff",
+                            fontFamily: "var(--font-mono)", fontSize: "0.8rem", outline: "none", appearance: "none"
+                          }}
+                        >
+                          <option value="genel" style={{ background: "#111" }}>Genel Rapor</option>
+                          <option value="astrofizik" style={{ background: "#111" }}>Astrofizik</option>
+                          <option value="uzay-madenciligi" style={{ background: "#111" }}>Uzay Madenciliği</option>
+                          <option value="uzay-tibbi" style={{ background: "#111" }}>Uzay Tıbbı</option>
+                        </select>
                         <textarea
                           value={editForm.content}
                           onChange={e => setEditForm({ ...editForm, content: e.target.value })}
@@ -579,7 +620,7 @@ export default function AdminPage() {
                             letterSpacing: "0.2em", color: "var(--accent)",
                             textTransform: "uppercase",
                           }}>
-                            📡 Rapor #{sortedIndex + 1} · {upd.date}
+                            📡 Rapor #{sortedIndex + 1} · {upd.date} {upd.category && upd.category !== 'genel' ? `· [${upd.category.toUpperCase()}]` : ''}
                           </span>
                           <div style={{ display: "flex", gap: "0.5rem" }}>
                             {/* Reorder buttons */}
@@ -690,6 +731,13 @@ export default function AdminPage() {
                     🌕 Ay Yüzeyi Evresi
                   </h2>
                   <textarea value={phases.surface.text} onChange={e => setPhases({ ...phases, surface: { text: e.target.value } })} placeholder="Metin" style={{ width: "100%", height: "120px", resize: "none", padding: "0.9rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", color: "#fff", fontFamily: "var(--font-mono)", outline: "none", lineHeight: 1.6 }} />
+                </div>
+                
+                <div style={{ padding: "2.5rem", background: "rgba(8, 12, 20, 0.7)", border: "1px solid rgba(0,240,255,0.1)", borderRadius: "16px", backdropFilter: "blur(15px)" }}>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--accent2)", marginBottom: "1.5rem" }}>
+                    🎯 Finale / Görev Alanı
+                  </h2>
+                  <textarea value={phases.finale?.text || ""} onChange={e => setPhases({ ...phases, finale: { text: e.target.value } })} placeholder="Kullanıcı adını yazdıktan sonra görünen son karşılama metni..." style={{ width: "100%", height: "120px", resize: "none", padding: "0.9rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", color: "#fff", fontFamily: "var(--font-mono)", outline: "none", lineHeight: 1.6 }} />
                 </div>
               </div>
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, MotionValue, AnimatePresence } from "framer-motion";
 import { Starfield, HyperspaceField, MovingStarsBackground, generateStars, Star } from "@/components/Starfield";
 import TankDetachPhase from "@/components/TankDetachPhase";
 import StarsNebulaPhase from "@/components/StarsNebulaPhase";
@@ -9,7 +9,7 @@ import SurfacePhase from "@/components/SurfacePhase";
 import FinalePhase from "@/components/FinalePhase";
 import LaunchPhase from "@/components/LaunchPhase";
 import DebrisPhase from "@/components/DebrisPhase";
-import { PhaseContent, CustomPhaseItem } from "@/app/admin/actions";
+import { PhaseContent, CustomPhaseItem, DevUpdate } from "@/app/admin/actions";
 
 function SceneCoasting({ progress, stars, data }: { progress: MotionValue<number>; stars: Star[]; data: PhaseContent["hyperspace"] }) {
   // Visible: 0.12 -> 0.26
@@ -40,7 +40,7 @@ function SceneCoasting({ progress, stars, data }: { progress: MotionValue<number
       
       {/* Receding Earth */}
       <motion.div style={{ position: "absolute", width: "400px", height: "400px", scale: earthScale, opacity: earthOpacity, y: earthY }}>
-        <Image src="/assets/earth.png" alt="Earth" fill
+        <Image src="/assets/earth.png" alt="Earth" fill sizes="(max-width: 768px) 100vw, 400px"
             style={{ objectFit: "contain", objectPosition: "center" }} priority />
       </motion.div>
 
@@ -101,7 +101,7 @@ function SceneMoonApproach({ progress, stars }: { progress: MotionValue<number>;
         <motion.div
           style={{ position: "relative", width: "400px", height: "400px", scale: moonScale }}
         >
-          <Image src="/assets/moon_hires.png" alt="Moon" fill
+          <Image src="/assets/moon_hires.png" alt="Moon" fill sizes="(max-width: 768px) 100vw, 400px"
             style={{ objectFit: "contain", borderRadius: "50%", mixBlendMode: "screen", filter: "drop-shadow(0 0 40px rgba(200,200,200,0.15))" }} />
         </motion.div>
       </div>
@@ -156,24 +156,44 @@ function CustomScrollItem({ progress, item }: { progress: MotionValue<number>; i
   );
 }
 
-export default function SpaceJourneyClient({ phasesData }: { phasesData: PhaseContent }) {
+export default function SpaceJourneyClient({ phasesData, articles = [] }: { phasesData: PhaseContent; articles?: DevUpdate[] }) {
   const [mounted, setMounted] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [stars, setStars] = useState<Star[]>([]);
+  const [hudOpen, setHudOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setStars(generateStars(300));
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      setMounted(true);
+      setStars(generateStars(300));
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Use global window scroll instead of a container ref to avoid hydration errors
+  // After mount, wait for the spring to settle at 0 before showing phases
+  useEffect(() => {
+    if (mounted) {
+      const readyTimer = setTimeout(() => setIsReady(true), 400);
+      return () => clearTimeout(readyTimer);
+    }
+  }, [mounted]);
+
+  // Smoothed scroll progress with spring for premium feel
   const { scrollYProgress } = useScroll();
-  const smoothProgress = scrollYProgress; // Direct 1:1 Apple-style mapping (no double smoothing)
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   // Render logic overlay fading based on start condition
   const startOverlayOpacity = useTransform(smoothProgress, [0, 0.02], [1, 0]);
   const startPointerEvents = useTransform(smoothProgress, (p) => p > 0.02 ? "none" : ("auto" as any));
 
-  if (!mounted) return <div style={{ width: "100%", height: "100vh", background: "#000" }} />;
+  if (!isReady) return <div style={{ width: "100%", height: "100vh", background: "#000" }} />;
 
   return (
     <div style={{ width: "100%", height: "20000vh", background: "#000", fontFamily: "var(--font-inter)", position: "relative" }}>
@@ -227,12 +247,91 @@ export default function SpaceJourneyClient({ phasesData }: { phasesData: PhaseCo
         <SurfacePhase progress={smoothProgress} data={phasesData.surface} />
 
         {/* 0.95 - 1.00 : Finale Form */}
-        <FinalePhase progress={smoothProgress} />
+        <FinalePhase progress={smoothProgress} data={phasesData.finale} />
 
         {/* Custom Admin Markers */}
         {phasesData.customItems?.map(item => (
           <CustomScrollItem key={item.id} progress={smoothProgress} item={item} />
         ))}
+
+        {/* HUD Mission Log Button */}
+        {articles.length > 0 && (
+          <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", zIndex: 9999 }}>
+            <motion.button
+              onClick={() => setHudOpen(!hudOpen)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                padding: "0.7rem 1.4rem",
+                background: hudOpen ? "rgba(255,174,0,0.15)" : "rgba(8,12,20,0.6)",
+                border: `1px solid ${hudOpen ? "rgba(255,174,0,0.4)" : "rgba(255,255,255,0.12)"}`,
+                borderRadius: "10px", color: hudOpen ? "var(--accent)" : "rgba(255,255,255,0.6)",
+                fontFamily: "var(--font-display)", fontSize: "0.6rem",
+                letterSpacing: "0.2em", textTransform: "uppercase",
+                cursor: "pointer", transition: "all 0.3s",
+                backdropFilter: "blur(15px)",
+                boxShadow: hudOpen ? "0 0 20px rgba(255,174,0,0.1)" : "none"
+              }}
+            >
+              📡 GÖREV GÜNLÜĞÜ {hudOpen ? "✕" : `(${articles.length})`}
+            </motion.button>
+
+            <AnimatePresence>
+              {hudOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  style={{
+                    position: "absolute", top: "calc(100% + 0.8rem)", right: 0,
+                    width: "420px", maxHeight: "70vh", overflowY: "auto",
+                    background: "rgba(8, 12, 20, 0.85)",
+                    border: "1px solid rgba(255,174,0,0.15)",
+                    borderRadius: "16px",
+                    backdropFilter: "blur(30px)",
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,174,0,0.05)",
+                    padding: "1.5rem",
+                  }}
+                >
+                  <div style={{ position: "sticky", top: 0, background: "rgba(8,12,20,0.95)", zIndex: 2, paddingBottom: "1rem", marginBottom: "1rem", borderBottom: "1px solid rgba(255,174,0,0.1)" }}>
+                    <p style={{ fontFamily: "var(--font-display)", fontSize: "0.65rem", letterSpacing: "0.3em", color: "var(--accent)", textTransform: "uppercase" }}>
+                      ✦ SAHA RAPORLARI
+                    </p>
+                    <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", marginTop: "0.3rem" }}>
+                      {articles.length} rapor mevcut
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                    {articles.map((a, i) => (
+                      <div key={i} style={{
+                        padding: "1.2rem", background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: "10px", position: "relative", overflow: "hidden"
+                      }}>
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, rgba(255,174,0,0.2), transparent)" }} />
+                        <p style={{ fontFamily: "var(--font-display)", fontSize: "0.55rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.35)", marginBottom: "0.4rem" }}>
+                          📡 {a.date}
+                        </p>
+                        <h4 style={{ fontFamily: "var(--font-outfit)", fontSize: "0.95rem", color: "#fff", marginBottom: "0.6rem", lineHeight: 1.3 }}>
+                          {a.title}
+                        </h4>
+                        <p style={{
+                          fontFamily: "var(--font-mono)", fontSize: "0.75rem",
+                          color: "rgba(255,255,255,0.55)", lineHeight: 1.7,
+                          display: "-webkit-box", WebkitLineClamp: 4,
+                          WebkitBoxOrient: "vertical" as const, overflow: "hidden"
+                        }}>
+                          {a.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
       </div>
     </div>

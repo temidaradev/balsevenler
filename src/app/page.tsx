@@ -1,7 +1,9 @@
 import SpaceJourneyClient from "./SpaceJourneyClient";
-import { getPhaseContent } from "@/app/admin/actions";
+import { getPhaseContent, getArticles } from "@/app/admin/actions";
 
 export default async function Page() {
   const content = await getPhaseContent();
-  return <SpaceJourneyClient phasesData={content} />;
+  const allArticles = await getArticles();
+  const genelArticles = allArticles.filter(a => !a.category || a.category === "genel");
+  return <SpaceJourneyClient phasesData={content} articles={genelArticles} />;
 }
