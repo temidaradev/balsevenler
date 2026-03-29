@@ -157,7 +157,7 @@ export default function SpaceJourney() {
 
   // Use global window scroll instead of a container ref to avoid hydration errors
   const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 400, damping: 90, restDelta: 0.0001 });
+  const smoothProgress = scrollYProgress; // Direct 1:1 Apple-style mapping (no double smoothing)
 
   // Render logic overlay fading based on start condition
   const startOverlayOpacity = useTransform(smoothProgress, [0, 0.02], [1, 0]);
@@ -166,7 +166,7 @@ export default function SpaceJourney() {
   if (!mounted) return <div style={{ width: "100%", height: "100vh", background: "#000" }} />;
 
   return (
-    <div style={{ width: "100%", height: "3500vh", background: "#000", fontFamily: "var(--font-inter)", position: "relative" }}>
+    <div style={{ width: "100%", height: "25000vh", background: "#000", fontFamily: "var(--font-inter)", position: "relative" }}>
       
       {/* GLOBAL SCROLL CONTENT LAYER - FIXED TO VIEWPORT */}
       <div style={{ position: "fixed", inset: 0, zIndex: 10, overflow: "hidden" }}>
