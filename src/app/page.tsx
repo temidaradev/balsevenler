@@ -205,7 +205,7 @@ export default function SpaceJourney() {
         {/* 0.25 - 0.35 : Debris Orbit */}
         <SceneDebris progress={smoothProgress} stars={stars} />
 
-        {/* 0.35 - 0.50 : Tank Detach Phase */}
+        {/* 0.32 - 0.54 : Tank Detach Phase */}
         <TankDetachPhase progress={smoothProgress} />
 
         {/* 0.50 - 0.65 : Stars Nebula / Exploration Phase */}

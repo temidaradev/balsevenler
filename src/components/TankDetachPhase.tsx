@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
+import React, { useMemo } from "react";
+import { motion, AnimatePresence, useTransform, MotionValue } from "framer-motion";
 
 const TEXTS = [
   "Yapılan iş ne olursa olsun onun zorluğu sadece yapan bilir. 400.000 kişinin ortak emeği olan Saturn V roketi o güne kadar üretilmiş en güçlü makineydi ve her saniye 13 ton yakıt tüketiyordu.",
@@ -8,117 +8,213 @@ const TEXTS = [
   "Şu an ayırdığımız bu devasa tanklar, Dünya'nın kütleçekiminden kurtulmamızı sağlayan fedailerdir. Ay'a varacak olan asıl parça, toplam roketin ağırlığının sadece %1'inden bile azdır.",
 ];
 
-// Deterministic star positions
-const BG_STARS = Array.from({ length: 60 }, (_, i) => ({
-  x: ((i * 17 + 5) * 13) % 100,
-  y: ((i * 23 + 3) * 11) % 100,
-  size: (i % 3) * 0.5 + 0.5,
-  dur: 3 + (i % 4),
-  delay: (i % 6) * 0.5,
-}));
+const TELEMETRY_DATA = [
+  { label: "Pres.", value: "24.8 PSI", status: "NOMINAL" },
+  { label: "Temp.", value: "-183 °C", status: "CRYO" },
+  { label: "Flow", value: "13.2 T/S", status: "MAX" },
+  { label: "Vibr.", value: "4.2 G", status: "STABLE" },
+];
 
 interface Props {
   progress: MotionValue<number>;
 }
 
-export default function TankDetachPhase({ progress }: Props) {
-  const [detached, setDetached] = useState<number[]>([]);
-  const [glitch, setGlitch] = useState(false);
-
-  // Map progress (0.35 to 0.50) to detachment states
-  useMotionValueEvent(progress, "change", (latest) => {
-    const newDetached = [];
-    if (latest > 0.38) newDetached.push(1);
-    if (latest > 0.43) newDetached.push(2);
-    if (latest > 0.48) newDetached.push(3);
-    
-    // Trigger glitch effect on transition
-    if (newDetached.length > detached.length) {
-      setGlitch(true);
-      setTimeout(() => setGlitch(false), 300);
-    }
-    
-    setDetached(newDetached);
-  });
-
-  const opacity = useTransform(progress, [0.33, 0.35, 0.50, 0.52], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.33 && p < 0.52 ? "auto" : ("none" as any));
+function Gauge({ label, progress, isDone }: { label: string; progress: MotionValue<number>; isDone: boolean }) {
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = useTransform(progress, [0, 1], [circumference, 0]);
 
   return (
-    <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "#000", opacity, pointerEvents }}>
+    <div className="hud-circle-gauge" style={{ width: "120px", height: "120px" }}>
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle className="hud-circle-gauge__bg" cx="60" cy="60" r={radius} />
+        <motion.circle
+          className="hud-circle-gauge__progress"
+          cx="60"
+          cy="60"
+          r={radius}
+          strokeDasharray={circumference}
+          style={{ 
+            strokeDashoffset,
+            stroke: isDone ? "var(--accent2)" : "var(--accent)",
+            filter: `drop-shadow(0 0 8px ${isDone ? "var(--accent2)" : "var(--accent)"}44)`
+          }}
+        />
+      </svg>
+      <div className="hud-circle-gauge__content">
+        <span style={{ 
+          fontFamily: "var(--font-display)", 
+          fontSize: "0.6rem", 
+          color: isDone ? "var(--accent2)" : "var(--accent)",
+          letterSpacing: "0.1em",
+          display: "block",
+          marginBottom: "2px"
+        }}>
+          {isDone ? "✓" : label}
+        </span>
+        <motion.span style={{ 
+          fontFamily: "var(--font-mono)", 
+          fontSize: "1rem",
+          fontWeight: 700,
+          color: "#fff"
+        }}>
+          {useTransform(progress, p => `${Math.round(p * 100)}%`)}
+        </motion.span>
+      </div>
+    </div>
+  );
+}
+
+export default function TankDetachPhase({ progress }: Props) {
+  // Phase visibility - widened to 0.32 - 0.54
+  const opacity = useTransform(progress, [0.30, 0.32, 0.54, 0.56], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.30 && p < 0.56 ? "auto" : ("none" as any));
+
+  // Individual stage progress with plateaus
+  // Stage 1: 0.34 -> 0.40 (6% scroll)
+  const stage1Progress = useTransform(progress, [0.34, 0.40], [0, 1]);
+  // Stage 2: 0.41 -> 0.47 (6% scroll)
+  const stage2Progress = useTransform(progress, [0.41, 0.47], [1e-5, 1]); // Small offset to avoid 0 flickering
+  // Stage 3: 0.48 -> 0.54 (6% scroll)
+  const stage3Progress = useTransform(progress, [0.48, 0.54], [1e-5, 1]);
+
+  const isStage1Done = useTransform(progress, p => p >= 0.40);
+  const isStage2Done = useTransform(progress, p => p >= 0.47);
+  const isStage3Done = useTransform(progress, p => p >= 0.54);
+
+  // Determine current active text based on progress
+  const activeTextIndex = useTransform(progress, (p) => {
+    if (p < 0.41) return 0;
+    if (p < 0.48) return 1;
+    return 2;
+  });
+
+  return (
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: "#000", opacity, pointerEvents }}>
+      <div className="hud-scan-line" />
       
-      {glitch && <div className="glitch-overlay" />}
+      {/* HUD Borders/Lines */}
+      <div style={{ position: "absolute", top: "5%", left: "5%", right: "5%", height: "1px", background: "linear-gradient(90deg, transparent, var(--accent), transparent)", opacity: 0.3 }} />
+      <div style={{ position: "absolute", bottom: "5%", left: "5%", right: "5%", height: "1px", background: "linear-gradient(90deg, transparent, var(--accent), transparent)", opacity: 0.3 }} />
 
-      {/* Background stars */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.3 }}>
-        {BG_STARS.map((s, i) => (
-          <div key={`td-star-${i}`} className="star star--twinkle" style={{
-            left: `${s.x}%`, top: `${s.y}%`,
-            width: `${s.size}px`, height: `${s.size}px`,
-            "--dur": `${s.dur}s`, "--delay": `${s.delay}s`, "--base-opacity": 0.5,
-          } as React.CSSProperties} />
-        ))}
-      </div>
-
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        style={{ fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.4em", color: "var(--accent)", marginBottom: "3rem", textTransform: "uppercase" }}>
-        Yakıt Tankı Ayırma Protokolü
-      </motion.p>
-
-      <div style={{ display: "flex", gap: "2.5rem", zIndex: 50 }}>
-        {[1, 2, 3].map(num => {
-          const isDetached = detached.includes(num);
-          let yOffset = "0px";
-          let scale = 1;
-          let opacityStyle = 1;
-          if (isDetached) {
-            yOffset = "100px";
-            scale = 0.8;
-            opacityStyle = 0.5;
-          }
-
-          return (
-            <motion.div key={`detach-${num}`} 
-              animate={{ y: yOffset, scale: scale, opacity: opacityStyle }}
-              transition={{ type: "spring", stiffness: 100 }}
-              className={`detach-btn ${isDetached ? "detach-btn--done" : ""}`}
-              style={{ pointerEvents: "none" }}> {/* Disabled manual clicks */}
-              <span style={{ fontSize: "1.4rem" }}>{isDetached ? "✓" : num}</span>
-              <span>{isDetached ? "AYRILDI" : "AYRILIYOR..."}</span>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <div style={{ marginTop: "3rem", width: "560px", minHeight: "120px" }}>
-        <AnimatePresence mode="wait">
-          {detached.length > 0 && detached.length <= 3 && (
-            <motion.div key={`text-${detached.length}`} initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-              transition={{ duration: 0.6 }}>
-              <div className="info-box" style={{ maxWidth: "100%" }}>
-                <p className="info-box__text">{TEXTS[detached.length - 1]}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <AnimatePresence>
-        {detached.length === 3 && (
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
-            style={{ marginTop: "2.5rem", textAlign: "center" }}>
-            <motion.h2 animate={{ textShadow: ["0 0 20px #00f0ff", "0 0 40px #00f0ff", "0 0 20px #00f0ff"] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              style={{ fontFamily: "var(--font-display)", color: "var(--accent2)", letterSpacing: "0.8em", fontSize: "1.8rem", marginBottom: "2rem" }}>
-              DONE
-            </motion.h2>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", fontFamily: "var(--font-display)", letterSpacing: "0.2em" }}>İlerlemek için kaydır</p>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 10%" }}>
+        
+        {/* LEFT SIDE: TELEMETRY */}
+        <div style={{ width: "240px", paddingRight: "4rem", borderRight: "1px solid rgba(255,174,0,0.1)" }}>
+          <p style={{ fontFamily: "var(--font-display)", fontSize: "0.6rem", letterSpacing: "0.4em", color: "rgba(255,255,255,0.3)", marginBottom: "1.5rem", textTransform: "uppercase" }}>
+            Telemetry Node 01
+          </p>
+          <div className="hud-telemetry">
+            {TELEMETRY_DATA.map((item, i) => (
+              <React.Fragment key={i}>
+                <span className="hud-label">{item.label}</span>
+                <span className="hud-value">{item.value}</span>
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="hud-line" />
+          <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+            <p className="hud-warning" style={{ fontSize: "0.6rem", fontFamily: "var(--font-display)", letterSpacing: "0.2em" }}>
+              CAUTION: DECOUPLING IN PROGRESS
+            </p>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+
+        {/* CENTER: GAUGES AND DESCRIPTION */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "0 4rem" }}>
+          <motion.p style={{ fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.6em", color: "var(--accent)", marginBottom: "4rem", textTransform: "uppercase", textAlign: "center" }}>
+            Yakıt Tankı Ayırma Protokolü
+          </motion.p>
+
+          <div style={{ display: "flex", gap: "3rem", marginBottom: "4rem" }}>
+            <Gauge label="ST-1" progress={stage1Progress} isDone={false} />
+            <Gauge label="ST-2" progress={stage2Progress} isDone={false} />
+            <Gauge label="ST-3" progress={stage3Progress} isDone={false} />
+          </div>
+
+          <div style={{ width: "100%", maxWidth: "600px", minHeight: "140px", position: "relative" }}>
+            {TEXTS.map((text, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                style={{ 
+                  position: "absolute",
+                  inset: 0,
+                  opacity: useTransform(activeTextIndex, val => val === i ? 1 : 0),
+                  pointerEvents: "none"
+                }}
+              >
+                <div className="info-box" style={{ maxWidth: "100%", background: "rgba(8, 12, 20, 0.4)", border: "none", boxShadow: "none" }}>
+                  <p className="info-box__text" style={{ fontSize: "0.9rem", textAlign: "center", fontStyle: "italic" }}>
+                    "{text}"
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: STATUS */}
+        <div style={{ width: "240px", paddingLeft: "4rem", borderLeft: "1px solid rgba(255,174,0,0.1)" }}>
+          <p style={{ fontFamily: "var(--font-display)", fontSize: "0.6rem", letterSpacing: "0.4em", color: "rgba(255,255,255,0.3)", marginBottom: "1.5rem", textTransform: "uppercase" }}>
+            System Status
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="hud-label">STAGE 1</span>
+              <motion.span style={{ 
+                fontFamily: "var(--font-mono)", 
+                fontSize: "0.7rem", 
+                color: useTransform(isStage1Done, done => done ? "var(--accent2)" : "var(--accent)") 
+              }}>
+                {useTransform(isStage1Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+              </motion.span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="hud-label">STAGE 2</span>
+              <motion.span style={{ 
+                fontFamily: "var(--font-mono)", 
+                fontSize: "0.7rem", 
+                color: useTransform(isStage2Done, done => done ? "var(--accent2)" : "var(--accent)") 
+              }}>
+                {useTransform(isStage2Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+              </motion.span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="hud-label">STAGE 3</span>
+              <motion.span style={{ 
+                fontFamily: "var(--font-mono)", 
+                fontSize: "0.7rem", 
+                color: useTransform(isStage3Done, done => done ? "var(--accent2)" : "var(--accent)") 
+              }}>
+                {useTransform(isStage3Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+              </motion.span>
+            </div>
+          </div>
+          
+          <div className="hud-line" style={{ marginTop: "2rem" }} />
+          
+          <AnimatePresence>
+            <motion.div
+              style={{ opacity: useTransform(isStage3Done, done => done ? 1 : 0) }}
+            >
+              <p style={{ color: "var(--accent2)", fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.5em", fontWeight: 800, marginTop: "1rem" }}>
+                ALL STAGES CLEAR
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.6rem", fontFamily: "var(--font-mono)", marginTop: "0.5rem" }}>
+                PROCEEDING TO LUNAR APPROACH...
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+      
+      {/* SCROLL HINT AT BOTTOM */}
+      <div style={{ position: "absolute", bottom: "8%", left: "50%", transform: "translateX(-50%)", textAlign: "center" }}>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", letterSpacing: "0.4em", color: "rgba(255,255,255,0.4)" }}>
+          CONTINUE SCROLLING TO COMPLETE SEPARATION
+        </p>
+      </div>
     </motion.div>
   );
 }
