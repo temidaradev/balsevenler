@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { verifyPassword, getArticles, addArticle, editArticle, deleteArticle, reorderArticles, DevUpdate, getPhaseContent, updatePhaseContent, PhaseContent } from "./actions";
+import { verifyPassword, getArticles, addArticle, editArticle, deleteArticle, reorderArticles, DevUpdate, getPhaseContent, updatePhaseContent, PhaseContent, CustomPhaseItem } from "./actions";
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
@@ -39,7 +39,8 @@ export default function AdminPage() {
     debris: { text: "" },
     tankDetach: { text1: "", text2: "", text3: "" },
     nebula: { star1: "", star2: "" },
-    surface: { text: "" }
+    surface: { text: "" },
+    customItems: []
   });
   const [activeTab, setActiveTab] = useState<"reports" | "phases">("reports");
   const [newArticle, setNewArticle] = useState({ title: "", content: "" });
@@ -129,6 +130,32 @@ export default function AdminPage() {
     await updatePhaseContent(phases);
     setIsSubmitting(false);
     showToast("Sahne içerikleri başarıyla güncellendi!");
+  };
+
+  const handleAddCustomItem = () => {
+    setPhases(prev => ({
+      ...prev,
+      customItems: [
+        ...(prev.customItems || []),
+        { id: Math.random().toString(36).substring(7), title: "", text: "", startScroll: 0.5, endScroll: 0.6 }
+      ]
+    }));
+  };
+
+  const handleUpdateCustomItem = (index: number, field: keyof CustomPhaseItem, value: string | number) => {
+    setPhases(prev => {
+      const items = [...(prev.customItems || [])];
+      items[index] = { ...items[index], [field]: value };
+      return { ...prev, customItems: items };
+    });
+  };
+
+  const handleDeleteCustomItem = (index: number) => {
+    setPhases(prev => {
+      const items = [...(prev.customItems || [])];
+      items.splice(index, 1);
+      return { ...prev, customItems: items };
+    });
   };
 
   // Login Screen
@@ -643,7 +670,7 @@ export default function AdminPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
                 <div style={{ padding: "2.5rem", background: "rgba(8, 12, 20, 0.7)", border: "1px solid rgba(0,240,255,0.1)", borderRadius: "16px", backdropFilter: "blur(15px)" }}>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--accent2)", marginBottom: "1.5rem" }}>
-                    🚀 Hiperspace Evresi
+                    🚀 Ay Rotası (Translunar Coasting)
                   </h2>
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <input value={phases.hyperspace.title} onChange={e => setPhases({ ...phases, hyperspace: { ...phases.hyperspace, title: e.target.value } })} placeholder="Başlık" style={{ width: "100%", padding: "0.9rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", color: "#fff", fontFamily: "var(--font-mono)", outline: "none" }} />
@@ -686,6 +713,43 @@ export default function AdminPage() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <textarea value={phases.nebula.star1} onChange={e => setPhases({ ...phases, nebula: { ...phases.nebula, star1: e.target.value } })} placeholder="Yıldız 1 Bilgisi" style={{ width: "100%", height: "120px", resize: "none", padding: "0.9rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", color: "#fff", fontFamily: "var(--font-mono)", outline: "none", lineHeight: 1.6 }} />
                     <textarea value={phases.nebula.star2} onChange={e => setPhases({ ...phases, nebula: { ...phases.nebula, star2: e.target.value } })} placeholder="Yıldız 2 Bilgisi" style={{ width: "100%", height: "200px", resize: "none", padding: "0.9rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", color: "#fff", fontFamily: "var(--font-mono)", outline: "none", lineHeight: 1.6 }} />
+                  </div>
+                </div>
+
+                <div style={{ padding: "2.5rem", background: "rgba(8, 12, 20, 0.7)", border: "1px solid rgba(0,240,255,0.1)", borderRadius: "16px", backdropFilter: "blur(15px)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--accent2)" }}>
+                      📌 Özel Eklentiler (Markers)
+                    </h2>
+                    <button type="button" onClick={handleAddCustomItem} style={{
+                      padding: "0.5rem 1rem", background: "rgba(0,240,100,0.1)", border: "1px solid rgba(0,240,100,0.3)", borderRadius: "6px", color: "#4ade80",
+                      fontFamily: "var(--font-display)", fontSize: "0.6rem", letterSpacing: "0.1em", cursor: "pointer", textTransform: "uppercase"
+                    }}>+ Yeni Ekle</button>
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                    {(phases.customItems || []).length === 0 && (
+                      <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
+                        Hiç özel eklenti yok. İstenen bir scroll yüzdesine yeni bir metin eklemek için tıklayın.
+                      </p>
+                    )}
+                    {(phases.customItems || []).map((item, index) => (
+                      <div key={item.id} style={{ padding: "1.5rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", position: "relative" }}>
+                        <button type="button" onClick={() => handleDeleteCustomItem(index)} style={{ position: "absolute", top: "1rem", right: "1rem", background: "rgba(255,60,60,0.1)", border: "1px solid rgba(255,60,60,0.3)", color: "#ff6b6b", width: "24px", height: "24px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.6rem", fontFamily: "var(--font-display)", color: "rgba(255,255,255,0.5)", marginBottom: "0.3rem" }}>Başlangıç Scroll (0-1)</label>
+                            <input type="number" step="0.01" min="0" max="1" value={item.startScroll} onChange={e => handleUpdateCustomItem(index, 'startScroll', parseFloat(e.target.value))} style={{ width: "100%", padding: "0.7rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontFamily: "var(--font-mono)" }} />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.6rem", fontFamily: "var(--font-display)", color: "rgba(255,255,255,0.5)", marginBottom: "0.3rem" }}>Bitiş Scroll (0-1)</label>
+                            <input type="number" step="0.01" min="0" max="1" value={item.endScroll} onChange={e => handleUpdateCustomItem(index, 'endScroll', parseFloat(e.target.value))} style={{ width: "100%", padding: "0.7rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontFamily: "var(--font-mono)" }} />
+                          </div>
+                        </div>
+                        <input value={item.title} onChange={e => handleUpdateCustomItem(index, 'title', e.target.value)} placeholder="Eklenti Başlığı" style={{ width: "100%", padding: "0.7rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontFamily: "var(--font-mono)", marginBottom: "1rem" }} />
+                        <textarea value={item.text} onChange={e => handleUpdateCustomItem(index, 'text', e.target.value)} placeholder="Görünecek metin yazısı..." style={{ width: "100%", height: "80px", resize: "none", padding: "0.7rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#fff", fontFamily: "var(--font-mono)", lineHeight: 1.5 }} />
+                      </div>
+                    ))}
                   </div>
                 </div>
 

@@ -67,17 +67,22 @@ function DustCloud({ particles, color }: { particles: typeof DUST_PARTICLES_WARM
 export default function StarsNebulaPhase({ progress, data }: Props) {
   const [scanned, setScanned] = useState<number[]>([]);
 
-  // Widened: star reveals now have more scroll distance between them
   useMotionValueEvent(progress, "change", (latest) => {
     const newScanned = [];
-    if (latest > 0.54) newScanned.push(1);
-    if (latest > 0.61) newScanned.push(2);
+    if (latest > 0.57) newScanned.push(1);
+    if (latest > 0.63) newScanned.push(2);
     setScanned(newScanned);
   });
 
-  // Widened from 0.48-0.67 to 0.48-0.70
-  const opacity = useTransform(progress, [0.46, 0.48, 0.68, 0.70], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.46 && p < 0.70 ? "auto" : ("none" as any));
+  // Strictly partitioned: 0.54-0.68
+  const opacity = useTransform(progress, [0.54, 0.55, 0.67, 0.68], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.54 && p < 0.68 ? "auto" : ("none" as any));
+
+  const pulse1Opacity = useTransform(progress, [0.55, 0.57, 0.60], [0, 1, 0]);
+  const pulse1Scale = useTransform(progress, [0.55, 0.60], [0.8, 1.2]);
+  
+  const pulse2Opacity = useTransform(progress, [0.61, 0.63, 0.66], [0, 1, 0]);
+  const pulse2Scale = useTransform(progress, [0.61, 0.66], [0.8, 1.2]);
 
   return (
     <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, background: "#000", opacity, pointerEvents }}>
@@ -116,7 +121,7 @@ export default function StarsNebulaPhase({ progress, data }: Props) {
       {/* Star 1 Glow Target - widened visibility */}
       <motion.div
         style={{ position: "absolute", left: "25%", top: "35%", width: "80px", height: "80px",
-          opacity: useTransform(progress, [0.49, 0.51, 0.54], [0, 1, 0]), scale: useTransform(progress, [0.49, 0.54], [0.8, 1.2]) }}
+          opacity: pulse1Opacity, scale: pulse1Scale }}
       >
         <motion.div className="nebula-star__glow"
           animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
@@ -142,7 +147,7 @@ export default function StarsNebulaPhase({ progress, data }: Props) {
       {/* Star 2 Glow Target - widened */}
       <motion.div
         style={{ position: "absolute", right: "20%", top: "45%", width: "100px", height: "100px",
-          opacity: useTransform(progress, [0.56, 0.58, 0.61], [0, 1, 0]), scale: useTransform(progress, [0.56, 0.61], [0.8, 1.2]) }}
+          opacity: pulse2Opacity, scale: pulse2Scale }}
       >
         <motion.div className="nebula-star__glow"
           animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}

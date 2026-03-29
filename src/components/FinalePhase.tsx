@@ -19,10 +19,13 @@ export default function FinalePhase({ progress }: Props) {
     { label: "STRATEJİ", icon: "♟️", color: "#a78bfa" },
   ];
 
-  const pointerEvents = useTransform(progress, (p) => p > 0.95 ? "auto" : ("none" as any));
+  const pointerEvents = useTransform(progress, (p) => p > 0.96 ? "auto" : ("none" as any));
+  const bgOpacity = useTransform(progress, [0.95, 0.96], [0, 1]);
+  const earthScale = useTransform(progress, [0, 0.8], [0.5, 1]);
+  const formY = useTransform(progress, [0, 1], [30, 0]);
 
   return (
-    <motion.div style={{ position: "absolute", inset: 0, zIndex: 100, background: "#000", opacity: useTransform(progress, [0.93, 0.95], [0, 1]), pointerEvents,
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 100, background: "#000", opacity: bgOpacity, pointerEvents,
         display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
 
       {/* Background stars */}
@@ -39,25 +42,20 @@ export default function FinalePhase({ progress }: Props) {
       {/* Earth using real image */}
       <motion.div
         style={{ position: "relative", width: "250px", height: "250px", marginBottom: "2.5rem",
-          scale: useTransform(progress, [0, 0.8], [0.5, 1]) }}
+          scale: earthScale }}
       >
         <motion.div animate={{ scale: [1, 1.03, 1] }}
           transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
           style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
             boxShadow: "0 0 60px rgba(70,130,230,0.35), 0 0 120px rgba(70,130,230,0.15)" }}>
-          <Image src="/assets/moon_surface.png" alt="Earth" fill
-            style={{ objectFit: "cover", objectPosition: "center 20%", mixBlendMode: "screen",
-              filter: "hue-rotate(180deg) saturate(1.5) brightness(1.2)" }} />
+          <Image src="/assets/earth.png" alt="Earth" fill
+            style={{ objectFit: "contain", objectPosition: "center" }} />
         </motion.div>
-        {/* Atmosphere glow */}
-        <div style={{ position: "absolute", inset: "-12px", borderRadius: "50%",
-          background: "radial-gradient(circle, transparent 55%, rgba(100,160,255,0.12) 75%, transparent 100%)",
-          pointerEvents: "none" }} />
       </motion.div>
 
       {/* Name input */}
       {!submitted ? (
-        <motion.div style={{ opacity: progress, y: useTransform(progress, [0, 1], [30, 0]) }}>
+        <motion.div style={{ opacity: progress, y: formY }}>
           <p style={{ fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.4em",
             color: "var(--accent)", marginBottom: "1.5rem", textTransform: "uppercase" }}>
             Görev Kaydı

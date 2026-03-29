@@ -20,6 +20,7 @@ function Gauge({ label, progress, isDone }: { label: string; progress: MotionVal
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = useTransform(progress, [0, 1], [circumference, 0]);
+  const pctLabel = useTransform(progress, p => `${Math.round(p * 100)}%`);
 
   return (
     <div className="hud-circle-gauge" style={{ width: "120px", height: "120px" }}>
@@ -55,7 +56,7 @@ function Gauge({ label, progress, isDone }: { label: string; progress: MotionVal
           fontWeight: 700,
           color: "#fff"
         }}>
-          {useTransform(progress, p => `${Math.round(p * 100)}%`)}
+          {pctLabel}
         </motion.span>
       </div>
     </div>
@@ -63,28 +64,44 @@ function Gauge({ label, progress, isDone }: { label: string; progress: MotionVal
 }
 
 export default function TankDetachPhase({ progress, data }: Props) {
-  // Phase visibility - crossfade with StarsNebulaPhase
-  const opacity = useTransform(progress, [0.28, 0.30, 0.46, 0.48], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.28 && p < 0.48 ? "auto" : ("none" as any));
+  // Phase visibility - strictly partitioned
+  const opacity = useTransform(progress, [0.38, 0.39, 0.53, 0.54], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.39 && p < 0.53 ? "auto" : ("none" as any));
 
-  // Compress completion before 0.46 so it doesn't overlap with StarsNebulaPhase
-  // Stage 1: 0.30 -> 0.35 (5% scroll)
-  const stage1Progress = useTransform(progress, [0.30, 0.35], [0, 1]);
-  // Stage 2: 0.36 -> 0.40 (4% scroll)
-  const stage2Progress = useTransform(progress, [0.36, 0.40], [1e-5, 1]);
-  // Stage 3: 0.41 -> 0.45 (4% scroll)
-  const stage3Progress = useTransform(progress, [0.41, 0.45], [1e-5, 1]);
+  // Stage 1: 0.40 -> 0.43
+  const stage1Progress = useTransform(progress, [0.40, 0.43], [0, 1]);
+  // Stage 2: 0.44 -> 0.47
+  const stage2Progress = useTransform(progress, [0.44, 0.47], [1e-5, 1]);
+  // Stage 3: 0.48 -> 0.51
+  const stage3Progress = useTransform(progress, [0.48, 0.51], [1e-5, 1]);
 
-  const isStage1Done = useTransform(progress, p => p >= 0.35);
-  const isStage2Done = useTransform(progress, p => p >= 0.40);
-  const isStage3Done = useTransform(progress, p => p >= 0.45);
+  const isStage1Done = useTransform(progress, p => p >= 0.43);
+  const isStage2Done = useTransform(progress, p => p >= 0.47);
+  const isStage3Done = useTransform(progress, p => p >= 0.51);
 
   // Determine current active text based on progress
   const activeTextIndex = useTransform(progress, (p) => {
-    if (p < 0.36) return 0;
-    if (p < 0.41) return 1;
+    if (p < 0.44) return 0;
+    if (p < 0.48) return 1;
     return 2;
   });
+
+  const textOpacities = [
+    useTransform(activeTextIndex, val => val === 0 ? 1 : 0),
+    useTransform(activeTextIndex, val => val === 1 ? 1 : 0),
+    useTransform(activeTextIndex, val => val === 2 ? 1 : 0),
+  ];
+
+  const uiStageColor1 = useTransform(isStage1Done, done => done ? "var(--accent2)" : "var(--accent)");
+  const uiStageText1 = useTransform(isStage1Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]");
+  
+  const uiStageColor2 = useTransform(isStage2Done, done => done ? "var(--accent2)" : "var(--accent)");
+  const uiStageText2 = useTransform(isStage2Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]");
+  
+  const uiStageColor3 = useTransform(isStage3Done, done => done ? "var(--accent2)" : "var(--accent)");
+  const uiStageText3 = useTransform(isStage3Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]");
+
+  const stage3DoneOpacity = useTransform(isStage3Done, done => done ? 1 : 0);
 
   return (
     <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: "#000", opacity, pointerEvents }}>
@@ -137,7 +154,7 @@ export default function TankDetachPhase({ progress, data }: Props) {
                 style={{ 
                   position: "absolute",
                   inset: 0,
-                  opacity: useTransform(activeTextIndex, val => val === i ? 1 : 0),
+                  opacity: textOpacities[i],
                   pointerEvents: "none"
                 }}
               >
@@ -162,9 +179,9 @@ export default function TankDetachPhase({ progress, data }: Props) {
               <motion.span style={{ 
                 fontFamily: "var(--font-mono)", 
                 fontSize: "0.7rem", 
-                color: useTransform(isStage1Done, done => done ? "var(--accent2)" : "var(--accent)") 
+                color: uiStageColor1 
               }}>
-                {useTransform(isStage1Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+                <motion.span>{uiStageText1 as any}</motion.span>
               </motion.span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -172,9 +189,9 @@ export default function TankDetachPhase({ progress, data }: Props) {
               <motion.span style={{ 
                 fontFamily: "var(--font-mono)", 
                 fontSize: "0.7rem", 
-                color: useTransform(isStage2Done, done => done ? "var(--accent2)" : "var(--accent)") 
+                color: uiStageColor2 
               }}>
-                {useTransform(isStage2Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+                <motion.span>{uiStageText2 as any}</motion.span>
               </motion.span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -182,9 +199,9 @@ export default function TankDetachPhase({ progress, data }: Props) {
               <motion.span style={{ 
                 fontFamily: "var(--font-mono)", 
                 fontSize: "0.7rem", 
-                color: useTransform(isStage3Done, done => done ? "var(--accent2)" : "var(--accent)") 
+                color: uiStageColor3 
               }}>
-                {useTransform(isStage3Done, done => done ? "[ SEPARATED ]" : "[ ATTACHED ]") as any}
+                <motion.span>{uiStageText3 as any}</motion.span>
               </motion.span>
             </div>
           </div>
@@ -193,7 +210,7 @@ export default function TankDetachPhase({ progress, data }: Props) {
           
           <AnimatePresence>
             <motion.div
-              style={{ opacity: useTransform(isStage3Done, done => done ? 1 : 0) }}
+              style={{ opacity: stage3DoneOpacity }}
             >
               <p style={{ color: "var(--accent2)", fontFamily: "var(--font-display)", fontSize: "0.8rem", letterSpacing: "0.5em", fontWeight: 800, marginTop: "1rem" }}>
                 ALL STAGES CLEAR

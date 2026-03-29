@@ -99,12 +99,21 @@ export async function reorderArticles(fromIndex: number, toIndex: number) {
 // PHASE CONTENT MANAGEMENT
 // ==========================================
 
+export interface CustomPhaseItem {
+  id: string;
+  title: string;
+  text: string;
+  startScroll: number;
+  endScroll: number;
+}
+
 export interface PhaseContent {
   hyperspace: { title: string; text: string; };
   debris: { text: string; };
   tankDetach: { text1: string; text2: string; text3: string; };
   nebula: { star1: string; star2: string; };
   surface: { text: string; };
+  customItems?: CustomPhaseItem[];
 }
 
 const DEFAULT_PHASE_CONTENT: PhaseContent = {
@@ -126,7 +135,8 @@ const DEFAULT_PHASE_CONTENT: PhaseContent = {
   },
   surface: {
     text: "Ay'a dikilen ilk bayraklar Apollo'nun egzozundan dolayı yanıp kül oldu. Lakin ayak izleri hala orada. O gün Ay'a ulaşılabileceğini kanıtlamışken şimdi oraya konaklamaya gidiyoruz ;)"
-  }
+  },
+  customItems: []
 };
 
 const PHASES_KEY = "balsevenler_phases";

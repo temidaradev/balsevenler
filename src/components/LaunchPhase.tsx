@@ -20,8 +20,13 @@ export default function LaunchPhase({ scrollProgress }: Props) {
   const smokeOpacity = useTransform(scrollProgress, [0, 0.08], [0.9, 0]);
 
   // Overall scene visibility
-  const sceneOpacity = useTransform(scrollProgress, [0.13, 0.15], [1, 0]);
-  const pointerEvents = useTransform(scrollProgress, (p) => p > 0.15 ? "none" : ("auto" as any));
+  const sceneOpacity = useTransform(scrollProgress, [0.11, 0.12], [1, 0]);
+  const pointerEvents = useTransform(scrollProgress, (p) => p > 0.12 ? "none" : ("auto" as any));
+
+  const starsOpacity = useTransform(scrollProgress, [0.08, 0.12], [0, 1]);
+  const cameraShakeX = useTransform(scrollProgress, [0.02, 0.08, 0.12], ["0px", "-4px", "0px"]);
+  const cameraShakeY = useTransform(scrollProgress, [0.02, 0.08, 0.12], ["0px", "5px", "0px"]);
+  const flashOpacity = useTransform(scrollProgress, [0.10, 0.11, 0.12], [0, 0.8, 0]);
 
   return (
     <motion.div
@@ -43,13 +48,13 @@ export default function LaunchPhase({ scrollProgress }: Props) {
 
         {/* Stars that appear as sky fades */}
         <motion.div
-          style={{ position: "absolute", inset: 0, opacity: useTransform(scrollProgress, [0.08, 0.12], [0, 1]) }}
+          style={{ position: "absolute", inset: 0, opacity: starsOpacity }}
         >
            {Array.from({ length: 50 }).map((_, i) => (
             <div key={`star-${i}`} style={{
               position: "absolute",
               left: `${((i * 13 + 5) * 17) % 100}%`,
-              top: `${((i * 17 + 7) * 23) % 100}%`,
+              top: `${((i * 17 + 7) * 23) % 85}%`, // Limited to top 85% to stay off ground
               width: `${(i % 3) + 1}px`,
               height: `${(i % 3) + 1}px`,
               background: "#fff",
@@ -63,8 +68,8 @@ export default function LaunchPhase({ scrollProgress }: Props) {
         <motion.div
           style={{
             position: "absolute", inset: "-15px",
-            x: useTransform(scrollProgress, [0.02, 0.08, 0.12], ["0px", "-4px", "0px"]),
-            y: useTransform(scrollProgress, [0.02, 0.08, 0.12], ["0px", "5px", "0px"])
+            x: cameraShakeX,
+            y: cameraShakeY
           }}
         >
           {/* Ground */}
@@ -121,7 +126,7 @@ export default function LaunchPhase({ scrollProgress }: Props) {
       <motion.div
         style={{
           position: "absolute", inset: 0, zIndex: 50, background: "#fff",
-          opacity: useTransform(scrollProgress, [0.10, 0.11, 0.12], [0, 0.8, 0]),
+          opacity: flashOpacity,
           pointerEvents: "none"
         }}
       />

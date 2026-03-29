@@ -11,27 +11,52 @@ interface Props {
 
 function FlagSVG({ active }: { active: boolean }) {
   return (
-    <svg width="100" height="160" viewBox="0 0 100 160">
-      {/* Pole */}
-      <line x1="20" y1="10" x2="20" y2="155" stroke={active ? "#d0d0d0" : "#555"} strokeWidth="3" />
-      <circle cx="20" cy="8" r="3" fill={active ? "#ffae00" : "#555"} />
-      {/* Flag */}
+    <svg width="120" height="180" viewBox="0 0 120 180" style={{ overflow: "visible" }}>
+      {/* Heavy base */}
+      <ellipse cx="20" cy="155" rx="16" ry="6" fill="#181818" stroke="#333" strokeWidth="2" />
+      <polygon points="12,150 28,150 24,140 16,140" fill="#333" />
+      
+      {/* High-tech Pole */}
+      <rect x="18" y="10" width="4" height="130" rx="1" fill={active ? "url(#poleGrad)" : "#555"} />
+      {active && (
+        <circle cx="20" cy="8" r="4" fill="#ffae00" style={{ filter: "drop-shadow(0 0 5px #ffae00)" }} />
+      )}
+      
+      {/* Flag Cloth */}
       <motion.g initial={{ scaleX: 0 }} animate={{ scaleX: active ? 1 : 0 }}
-        transition={{ duration: 1, type: "spring" }} style={{ transformOrigin: "22px 30px" }}>
-        <rect x="22" y="12" width="65" height="45" rx="3"
-          fill={active ? "url(#flagGrad)" : "#333"} stroke={active ? "#ffae00" : "#444"} strokeWidth="1" />
-        {active && <>
-          <circle cx="55" cy="34" r="10" fill="#ffae00" opacity={0.9} />
-          <path d="M55 24 L57 31 L64 31 L58 35 L60 42 L55 38 L50 42 L52 35 L46 31 L53 31 Z"
-            fill="#ff3d3d" opacity={0.8} />
-        </>}
+        transition={{ duration: 1, type: "spring", stiffness: 50 }} style={{ transformOrigin: "22px 30px" }}>
+        
+        {/* Flag Red Background (Solid Rectangular with slight wave) */}
+        <path d="M 22 15 Q 55 12, 88 15 L 88 55 Q 55 58, 22 55 Z" 
+          fill={active ? "#E30A17" : "#111"} />
+        
+        {/* Precise Turkish Flag Details */}
+        {active && (
+          <g transform="translate(43, 35) scale(0.9)">
+            {/* The Crescent */}
+            <circle r="12.5" fill="white" />
+            <circle cx="3.125" r="10" fill="#E30A17" />
+            
+            {/* The Star (Correctly oriented 5-pointed star pointing at crescent) */}
+            <g transform="translate(16, 0)">
+              <path d="M -6.25 0 L -2 -1.5 L -1.9 -6 L 0.8 -2.4 L 5 -3.6 L 2.5 0 L 5 3.6 L 0.8 2.4 L -1.9 6 L -2 1.5 Z" fill="white" />
+            </g>
+          </g>
+        )}
       </motion.g>
-      {/* Base */}
-      {active && <ellipse cx="20" cy="155" rx="15" ry="4" fill="rgba(255,255,255,0.1)" />}
+
+      {/* Ground shadow */}
+      {active && <ellipse cx="35" cy="158" rx="25" ry="5" fill="rgba(0,0,0,0.5)" style={{ filter: "blur(4px)" }} />}
+
       <defs>
+        <linearGradient id="poleGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#cfcfcf" />
+          <stop offset="50%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#999999" />
+        </linearGradient>
         <linearGradient id="flagGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#cc2200" />
-          <stop offset="100%" stopColor="#ff4422" />
+          <stop offset="0%" stopColor="#E30A17" />
+          <stop offset="100%" stopColor="#E30A17" />
         </linearGradient>
       </defs>
     </svg>
@@ -40,84 +65,145 @@ function FlagSVG({ active }: { active: boolean }) {
 
 function RoverSVG({ active }: { active: boolean }) {
   return (
-    <svg width="160" height="110" viewBox="0 0 160 110">
-      {/* Body */}
-      <motion.rect x="25" y="25" width="110" height="40" rx="12"
-        fill={active ? "#8a8a8a" : "#333"} stroke={active ? "#aaa" : "#444"} strokeWidth="1.5" />
-      {/* Cabin */}
-      <motion.rect x="50" y="10" width="45" height="22" rx="8"
-        fill={active ? "#5a9ec8" : "#333"} stroke={active ? "#7ec8e3" : "#444"} strokeWidth="1"
-        initial={{ opacity: 0 }} animate={{ opacity: active ? 1 : 0 }} transition={{ delay: 0.3 }} />
-      {active && <>
-        {/* Wheels */}
-        <circle cx="45" cy="75" r="14" fill="#444" stroke="#666" strokeWidth="2" />
-        <circle cx="45" cy="75" r="6" fill="#555" />
-        <circle cx="115" cy="75" r="14" fill="#444" stroke="#666" strokeWidth="2" />
-        <circle cx="115" cy="75" r="6" fill="#555" />
-        {/* Axle */}
-        <rect x="45" y="65" width="70" height="4" rx="2" fill="#555" />
-        {/* Antenna */}
-        <motion.line x1="100" y1="18" x2="130" y2="5" stroke="#ccc" strokeWidth="1.5"
-          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.5 }} />
-        <motion.circle cx="130" cy="5" r="4" fill="transparent" stroke="#00f0ff" strokeWidth="1.5"
-          initial={{ scale: 0 }} animate={{ scale: [1, 1.3, 1] }}
-          transition={{ delay: 0.7, repeat: Infinity, duration: 2 }} />
-        <motion.circle cx="130" cy="5" r="2" fill="#00f0ff"
-          initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.7 }} />
-        {/* Solar panel */}
-        <rect x="30" y="18" width="18" height="10" rx="1" fill="#3366aa" stroke="#5588cc" strokeWidth="0.5" />
-        <line x1="39" y1="23" x2="25" y2="33" stroke="#777" strokeWidth="1" />
-        {/* Details on body */}
-        <rect x="60" y="35" width="8" height="8" rx="1" fill="#666" />
-        <rect x="75" y="35" width="8" height="8" rx="1" fill="#666" />
-        <rect x="90" y="35" width="8" height="8" rx="1" fill="#666" />
-      </>}
+    <svg width="220" height="150" viewBox="0 0 220 150" style={{ overflow: "visible" }}>
+      {/* Suspension / Chassis bottom */}
+      <rect x="35" y="85" width="130" height="8" rx="4" fill={active ? "#2a2d34" : "#222"} />
+      
+      {/* 6 Wheels */ }
+      {active && [25, 80, 135].map((x, i) => (
+        <g key={`wheel-${i}`} transform={`translate(${x}, 85)`}>
+          <circle cx="20" cy="15" r="16" fill="#181818" stroke="#555" strokeWidth="3" />
+          <circle cx="20" cy="15" r="8" fill="#333" />
+          {/* Wheel treads */}
+          <line x1="4" y1="15" x2="36" y2="15" stroke="#000" strokeWidth="2" strokeDasharray="3 3" />
+          <line x1="20" y1="-1" x2="20" y2="31" stroke="#000" strokeWidth="2" strokeDasharray="3 3" />
+        </g>
+      ))}
+
+      {/* Main Hull */}
+      <motion.path d="M 30 85 L 35 55 L 60 45 L 140 45 L 165 60 L 170 85 Z"
+        fill={active ? "url(#roverBody)" : "#333"} stroke={active ? "#ccc" : "#444"} strokeWidth="2" />
+      
+      {/* Science Deck & Panels */}
+      {active && (
+        <>
+          {/* Solar Wing Left */}
+          <rect x="40" y="38" width="40" height="8" rx="2" fill="#2a5599" stroke="#4477bb" strokeWidth="1" />
+          <line x1="50" y1="38" x2="50" y2="46" stroke="#4477bb" strokeWidth="1" />
+          <line x1="60" y1="38" x2="60" y2="46" stroke="#4477bb" strokeWidth="1" />
+          <line x1="70" y1="38" x2="70" y2="46" stroke="#4477bb" strokeWidth="1" />
+
+          {/* Sensor Mast / Camera Head */}
+          <line x1="145" y1="45" x2="145" y2="15" stroke="#ccc" strokeWidth="3" />
+          <rect x="135" y="0" width="20" height="15" rx="3" fill="#fff" />
+          <circle cx="140" cy="7" r="4" fill="#000" />
+          <circle cx="140" cy="7" r="2" fill="#ff0044" /> {/* Red glowing lens */}
+          
+          {/* Comm Antenna */}
+          <motion.path d="M 70 45 Q 85 10 90 5" stroke="#888" strokeWidth="2" fill="none"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 1 }} />
+          <motion.circle cx="90" cy="5" r="3" fill="#00f0ff"
+            animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} />
+
+          {/* Side Gold Foil / Instrument box */}
+          <rect x="90" y="55" width="40" height="18" rx="2" fill="#d4af37" />
+          <rect x="95" y="60" width="10" height="8" rx="1" fill="#111" />
+          <rect x="110" y="60" width="15" height="4" rx="1" fill="#111" />
+
+          {/* Body accents */}
+          <line x1="45" y1="65" x2="80" y2="65" stroke="#888" strokeWidth="1.5" />
+          <line x1="45" y1="75" x2="80" y2="75" stroke="#888" strokeWidth="1.5" />
+        </>
+      )}
+
       {/* Ground shadow */}
-      {active && <ellipse cx="80" cy="95" rx="50" ry="6" fill="rgba(0,0,0,0.3)" />}
+      {active && <ellipse cx="100" cy="115" rx="80" ry="10" fill="rgba(0,0,0,0.6)" style={{ filter: "blur(6px)" }} />}
+
+      <defs>
+        <linearGradient id="roverBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#aaaaaa" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
 
 function ColonySVG({ active }: { active: boolean }) {
   return (
-    <svg width="220" height="140" viewBox="0 0 220 140">
-      {/* Main Dome */}
-      <motion.path d="M30 110 Q30 35 110 28 Q190 35 190 110 Z"
-        fill={active ? "rgba(180,180,180,0.15)" : "rgba(50,50,50,0.15)"}
-        stroke={active ? "#aaa" : "#444"} strokeWidth="2"
+    <svg width="300" height="180" viewBox="0 0 300 180" style={{ overflow: "visible" }}>
+      
+      {/* Connectors / Tubes */}
+      <rect x="150" y="115" width="60" height="15" rx="5" fill={active ? "#777" : "#333"} />
+      <rect x="50" y="115" width="40" height="15" rx="5" fill={active ? "#777" : "#333"} />
+
+      {/* Main Dome (Central) */}
+      <motion.path d="M 60 130 C 60 40, 180 40, 180 130 Z"
+        fill={active ? "rgba(180,210,255,0.15)" : "rgba(50,50,50,0.15)"}
+        stroke={active ? "#7ec8e3" : "#444"} strokeWidth="2"
         initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} />
-      {/* Smaller dome */}
-      <motion.path d="M140 110 Q140 75 175 70 Q210 75 210 110 Z"
-        fill={active ? "rgba(160,160,160,0.1)" : "rgba(40,40,40,0.1)"}
-        stroke={active ? "#888" : "#444"} strokeWidth="1.5" />
+      
+      {/* Secondary Dome (Right) */}
+      <motion.path d="M 190 130 C 190 80, 260 80, 260 130 Z"
+        fill={active ? "rgba(160,200,255,0.1)" : "rgba(40,40,40,0.1)"}
+        stroke={active ? "#5a9ec8" : "#444"} strokeWidth="1.5" />
+
+      {/* Tertiary Module (Left) */}
+      <motion.rect x="10" y="90" width="40" height="40" rx="5"
+        fill={active ? "#2a2d34" : "#222"} stroke={active ? "#888" : "#333"} strokeWidth="2" />
+
+      {/* Dome Geodesic Lines (Hexagon-ish network) */}
+      {active && (
+        <g stroke="rgba(126,200,227,0.3)" strokeWidth="1" fill="none">
+          <path d="M 80 130 L 95 90 L 145 90 L 160 130" />
+          <path d="M 95 90 L 120 50 L 145 90" />
+          <path d="M 60 130 L 120 50 L 180 130" />
+          <path d="M 120 50 L 120 130" />
+        </g>
+      )}
+
       {active && <>
-        {/* Windows - animated glow */}
-        <motion.rect x="65" y="60" width="16" height="16" rx="3" fill="#7ec8e3"
-          animate={{ opacity: [0.4, 0.9, 0.4] }} transition={{ repeat: Infinity, duration: 3 }} />
-        <motion.rect x="90" y="52" width="16" height="16" rx="3" fill="#ffae00"
-          animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 3.5, delay: 0.5 }} />
-        <motion.rect x="115" y="60" width="16" height="16" rx="3" fill="#7ec8e3"
-          animate={{ opacity: [0.3, 0.8, 0.3] }} transition={{ repeat: Infinity, duration: 2.8, delay: 1 }} />
-        {/* Door */}
-        <rect x="95" y="85" width="20" height="25" rx="10" fill="rgba(100,200,255,0.2)" stroke="#7ec8e3" strokeWidth="1" />
-        {/* Antenna */}
-        <line x1="110" y1="28" x2="110" y2="8" stroke="#ccc" strokeWidth="1.5" />
-        <motion.circle cx="110" cy="6" r="4" fill="#ff3d3d"
-          animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }} />
-        {/* Solar panels */}
-        <rect x="8" y="75" width="22" height="16" rx="1" fill="#3366aa" stroke="#5588cc" strokeWidth="0.5" />
-        <line x1="30" y1="83" x2="40" y2="95" stroke="#888" strokeWidth="1" />
-        <rect x="8" y="60" width="22" height="14" rx="1" fill="#2a5599" stroke="#4477bb" strokeWidth="0.5" />
-        {/* Second dome window */}
-        <motion.rect x="168" y="82" width="12" height="12" rx="2" fill="#ffae00"
-          animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ repeat: Infinity, duration: 4 }} />
-        {/* Connector tube */}
-        <rect x="135" y="95" width="15" height="8" rx="4" fill="rgba(150,150,150,0.3)" stroke="#777" strokeWidth="0.5" />
-        {/* Ground markings */}
-        <line x1="20" y1="115" x2="200" y2="115" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="4 4" />
+        {/* Central Dome Interior Lights & Modules */}
+        <rect x="90" y="100" width="50" height="30" rx="4" fill="#111" />
+        <motion.rect x="95" y="105" width="12" height="6" fill="#00f0ff"
+          animate={{ opacity: [0.6, 1, 0.6] }} transition={{ repeat: Infinity, duration: 2 }} />
+        <motion.rect x="115" y="105" width="8" height="6" fill="#ffae00" />
+        <motion.rect x="128" y="105" width="8" height="6" fill="#ffae00" />
+        <motion.rect x="95" y="115" width="40" height="10" fill="#7ec8e3" opacity={0.4} />
+
+        <circle cx="145" cy="80" r="15" fill="#222" opacity="0.8" />
+        <motion.circle cx="145" cy="80" r="10" fill="#00f0ff"
+          style={{ filter: "drop-shadow(0 0 8px #00f0ff)" }} opacity={0.6}
+          animate={{ scale: [0.9, 1.1, 0.9] }} transition={{ repeat: Infinity, duration: 4 }} />
+
+        {/* Right Dome Botanical / Biome (Greenish glow) */}
+        <motion.path d="M 205 130 Q 225 100, 245 130 Z" fill="rgba(80,255,100,0.15)"
+          style={{ filter: "drop-shadow(0 0 10px rgba(80,255,100,0.4))" }} />
+        <circle cx="225" cy="115" r="4" fill="#50ff64" />
+        <circle cx="215" cy="125" r="3" fill="#50ff64" />
+        <circle cx="235" cy="125" r="3" fill="#50ff64" />
+
+        {/* Left Module Details */}
+        <rect x="15" y="100" width="10" height="20" rx="2" fill="#555" />
+        <rect x="30" y="110" width="10" height="10" rx="2" fill="#555" />
+        <motion.circle cx="35" cy="100" r="3" fill="#ff4444"
+          animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1 }} />
+        <line x1="30" y1="90" x2="30" y2="70" stroke="#aaa" strokeWidth="2" />
+
+        {/* Comm Tower Behind Dome */}
+        <line x1="120" y1="45" x2="120" y2="10" stroke="#aaa" strokeWidth="2" />
+        <circle cx="120" cy="10" r="4" fill="#ffae00" />
+        <path d="M 110 5 Q 120 -5, 130 5" fill="none" stroke="#ccc" strokeWidth="1.5" />
+
+        {/* Landing Pad Lights Front */}
+        <g stroke="#ffae00" strokeWidth="1" strokeDasharray="3 3">
+          <line x1="40" y1="145" x2="260" y2="145" opacity="0.5" />
+          <line x1="60" y1="155" x2="240" y2="155" opacity="0.3" />
+        </g>
       </>}
+
       {/* Ground shadow */}
-      {active && <ellipse cx="110" cy="118" rx="80" ry="8" fill="rgba(0,0,0,0.2)" />}
+      {active && <ellipse cx="140" cy="135" rx="120" ry="12" fill="rgba(0,0,0,0.8)" style={{ filter: "blur(8px)" }} />}
     </svg>
   );
 }
@@ -127,21 +213,22 @@ export default function SurfacePhase({ progress, data }: Props) {
 
   useMotionValueEvent(progress, "change", (latest) => {
     const steps = [];
-    if (latest > 0.82) steps.push(1);
-    if (latest > 0.87) steps.push(2);
-    if (latest > 0.92) steps.push(3);
+    if (latest > 0.86) steps.push(1);
+    if (latest > 0.90) steps.push(2);
+    if (latest > 0.94) steps.push(3);
     setColonySteps(steps);
   });
 
-  const opacity = useTransform(progress, [0.78, 0.80, 0.95, 0.97], [0, 1, 1, 0]);
-  const pointerEvents = useTransform(progress, (p) => p > 0.78 && p < 0.97 ? "auto" : ("none" as any));
+  // Strictly partitioned: 0.84-0.96
+  const opacity = useTransform(progress, [0.84, 0.85, 0.95, 0.96], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.84 && p < 0.96 ? "auto" : ("none" as any));
 
   return (
     <motion.div style={{ position: "absolute", inset: 0, zIndex: 10, opacity, pointerEvents }}>
 
       {/* Moon surface - use real image as background */}
       <Image src="/assets/moon_surface.png" alt="Moon Surface" fill
-        style={{ objectFit: "cover", objectPosition: "center bottom" }} priority />
+        style={{ objectFit: "cover", objectPosition: "center" }} priority />
       
       {/* Darken overlay for readability */}
       <div style={{ position: "absolute", inset: 0,
@@ -157,13 +244,13 @@ export default function SurfacePhase({ progress, data }: Props) {
 
       {/* Interactive Silhouettes */}
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5, duration: 1 }}
-        style={{ position: "absolute", bottom: "12%", left: "50%", transform: "translateX(-50%)",
+        style={{ position: "absolute", bottom: "18%", left: "50%", transform: "translateX(-50%)",
           display: "flex", gap: "4rem", alignItems: "flex-end", zIndex: 20 }}>
 
         {/* Flag */}
         <div className="silhouette">
-          <motion.div className="silhouette__shape" style={{ opacity: colonySteps.includes(1) ? 1 : 0.3 }}
-            animate={colonySteps.includes(1) ? { opacity: 1 } : { opacity: [0.2, 0.45, 0.2] }}
+          <motion.div className="silhouette__shape" style={{ opacity: colonySteps.includes(1) ? 1 : 0.6 }}
+            animate={colonySteps.includes(1) ? { opacity: 1 } : { opacity: [0.4, 0.7, 0.4] }}
             transition={colonySteps.includes(1) ? {} : { repeat: Infinity, duration: 2 }}>
             <FlagSVG active={colonySteps.includes(1)} />
           </motion.div>
@@ -173,8 +260,8 @@ export default function SurfacePhase({ progress, data }: Props) {
         {/* Rover */}
         <div className="silhouette">
           <motion.div className="silhouette__shape"
-            style={{ opacity: colonySteps.includes(2) ? 1 : colonySteps.includes(1) ? 0.3 : 0.1 }}
-            animate={!colonySteps.includes(2) && colonySteps.includes(1) ? { opacity: [0.2, 0.45, 0.2] } : {}}
+            style={{ opacity: colonySteps.includes(2) ? 1 : colonySteps.includes(1) ? 0.6 : 0.4 }}
+            animate={!colonySteps.includes(2) && colonySteps.includes(1) ? { opacity: [0.4, 0.7, 0.4] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}>
             <RoverSVG active={colonySteps.includes(2)} />
           </motion.div>
@@ -184,8 +271,8 @@ export default function SurfacePhase({ progress, data }: Props) {
         {/* Colony */}
         <div className="silhouette">
           <motion.div className="silhouette__shape"
-            style={{ opacity: colonySteps.includes(3) ? 1 : colonySteps.includes(2) ? 0.3 : 0.1 }}
-            animate={!colonySteps.includes(3) && colonySteps.includes(2) ? { opacity: [0.2, 0.45, 0.2] } : {}}
+            style={{ opacity: colonySteps.includes(3) ? 1 : colonySteps.includes(2) ? 0.6 : 0.4 }}
+            animate={!colonySteps.includes(3) && colonySteps.includes(2) ? { opacity: [0.4, 0.7, 0.4] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}>
             <ColonySVG active={colonySteps.includes(3)} />
           </motion.div>
