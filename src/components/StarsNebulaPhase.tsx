@@ -1,5 +1,6 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
 
 const STAR1_TEXT = "Aya gidildikçe sadece aradaki mesafe artmaz. Ayrıca aradaki zaman da artar. Aya gittikçe zaman minik farklarla daha yavaş akmaya başlar… Gençleşmenin sırrı ;)";
 
@@ -41,9 +42,7 @@ const DUST_PARTICLES_COOL = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 interface Props {
-  clicked: number[];
-  onClick: (n: number) => void;
-  onDone: () => void;
+  progress: MotionValue<number>;
 }
 
 function DustCloud({ particles, color }: { particles: typeof DUST_PARTICLES_WARM; color: string }) {
@@ -63,10 +62,22 @@ function DustCloud({ particles, color }: { particles: typeof DUST_PARTICLES_WARM
   );
 }
 
-export default function StarsNebulaPhase({ clicked, onClick, onDone }: Props) {
+export default function StarsNebulaPhase({ progress }: Props) {
+  const [scanned, setScanned] = useState<number[]>([]);
+
+  // Convert global scroll progress (0.50 -> 0.65) into "scanned" steps
+  useMotionValueEvent(progress, "change", (latest) => {
+    const newScanned = [];
+    if (latest > 0.55) newScanned.push(1);
+    if (latest > 0.60) newScanned.push(2);
+    setScanned(newScanned);
+  });
+
+  const opacity = useTransform(progress, [0.48, 0.50, 0.65, 0.67], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.48 && p < 0.67 ? "auto" : ("none" as any));
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      style={{ position: "absolute", inset: 0, zIndex: 20, background: "#000" }}>
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, background: "#000", opacity, pointerEvents }}>
 
       {/* Background stars */}
       <div style={{ position: "absolute", inset: 0, opacity: 0.4 }}>
@@ -79,14 +90,14 @@ export default function StarsNebulaPhase({ clicked, onClick, onDone }: Props) {
         ))}
       </div>
 
-      {/* Dust clouds when stars clicked */}
+      {/* Dust clouds when stars scanned */}
       <AnimatePresence>
-        {clicked.includes(1) && (
+        {scanned.includes(1) && (
           <motion.div key="dust1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
             <DustCloud particles={DUST_PARTICLES_WARM} color="#ffae00" />
           </motion.div>
         )}
-        {clicked.includes(2) && (
+        {scanned.includes(2) && (
           <motion.div key="dust2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
             <DustCloud particles={DUST_PARTICLES_COOL} color="#00f0ff" />
           </motion.div>
@@ -96,27 +107,25 @@ export default function StarsNebulaPhase({ clicked, onClick, onDone }: Props) {
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.5 }}
         style={{ position: "absolute", top: "5%", left: "50%", transform: "translateX(-50%)",
           fontFamily: "var(--font-display)", fontSize: "0.65rem", letterSpacing: "0.5em", color: "#fff" }}>
-        GEMİ PENCERESİ — YILDIZ GÖZLEM
+        GEMİ PENCERESİ — YILDIZ GÖZLEM (BİLGİLERİ TARAMAK İÇİN KAYDIR)
       </motion.p>
 
-      {/* Star 1 */}
-      {!clicked.includes(1) && (
-        <motion.div className="nebula-star" onClick={() => onClick(1)}
-          initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
-          style={{ left: "25%", top: "35%", width: "80px", height: "80px" }}>
-          <motion.div className="nebula-star__glow"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ repeat: Infinity, duration: 3 }}
-            style={{ background: "radial-gradient(circle, #ffae00, transparent 60%)", color: "#ffae00" }} />
-        </motion.div>
-      )}
+      {/* Star 1 Glow Target (Fades as it gets scanned) */}
+      <motion.div
+        style={{ position: "absolute", left: "25%", top: "35%", width: "80px", height: "80px",
+          opacity: useTransform(progress, [0.50, 0.52, 0.55], [0, 1, 0]), scale: useTransform(progress, [0.50, 0.55], [0.8, 1.2]) }}
+      >
+        <motion.div className="nebula-star__glow"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ repeat: Infinity, duration: 3 }}
+          style={{ background: "radial-gradient(circle, #ffae00, transparent 60%)", color: "#ffae00" }} />
+      </motion.div>
 
       {/* Star 1 info */}
       <AnimatePresence>
-        {clicked.includes(1) && (
+        {scanned.includes(1) && (
           <motion.div key="star1info" initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}
             style={{ position: "absolute", left: "10%", top: "25%", width: "380px", zIndex: 60 }}>
             <div className="nebula-card" style={{ borderColor: "rgba(255,174,0,0.2)" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px",
@@ -127,24 +136,22 @@ export default function StarsNebulaPhase({ clicked, onClick, onDone }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Star 2 - only appears after star 1 is clicked */}
-      {!clicked.includes(2) && clicked.includes(1) && (
-        <motion.div className="nebula-star" onClick={() => onClick(2)}
-          initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, type: "spring" }}
-          style={{ right: "20%", top: "45%", width: "100px", height: "100px" }}>
-          <motion.div className="nebula-star__glow"
-            animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
-            transition={{ repeat: Infinity, duration: 4 }}
-            style={{ background: "radial-gradient(circle, #00f0ff, transparent 60%)", color: "#00f0ff" }} />
-        </motion.div>
-      )}
+      {/* Star 2 Glow Target */}
+      <motion.div
+        style={{ position: "absolute", right: "20%", top: "45%", width: "100px", height: "100px",
+          opacity: useTransform(progress, [0.55, 0.58, 0.60], [0, 1, 0]), scale: useTransform(progress, [0.55, 0.60], [0.8, 1.2]) }}
+      >
+        <motion.div className="nebula-star__glow"
+          animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
+          transition={{ repeat: Infinity, duration: 4 }}
+          style={{ background: "radial-gradient(circle, #00f0ff, transparent 60%)", color: "#00f0ff" }} />
+      </motion.div>
 
       {/* Star 2 info */}
       <AnimatePresence>
-        {clicked.includes(2) && (
+        {scanned.includes(2) && (
           <motion.div key="star2info" initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}
             style={{ position: "absolute", right: "8%", top: "15%", width: "440px", zIndex: 60 }}>
             <div className="nebula-card">
               <p className="nebula-card__text" style={{ whiteSpace: "pre-line" }}>{STAR2_TEXT}</p>
@@ -152,14 +159,6 @@ export default function StarsNebulaPhase({ clicked, onClick, onDone }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Continue */}
-      {clicked.length >= 2 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-          style={{ position: "absolute", bottom: "8%", left: "50%", transform: "translateX(-50%)", zIndex: 100 }}>
-          <button className="continue-btn" onClick={onDone}>Aya Yaklaş →</button>
-        </motion.div>
-      )}
     </motion.div>
   );
 }

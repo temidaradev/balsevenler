@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, MotionValue, useTransform } from "framer-motion";
 import Image from "next/image";
 
 interface Props {
-  onComplete: () => void;
+  progress: MotionValue<number>;
 }
 
-export default function FinalePhase({ onComplete }: Props) {
+export default function FinalePhase({ progress }: Props) {
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [selectedField, setSelectedField] = useState<string | null>(null);
@@ -19,9 +19,10 @@ export default function FinalePhase({ onComplete }: Props) {
     { label: "STRATEJİ", icon: "♟️", color: "#a78bfa" },
   ];
 
+  const pointerEvents = useTransform(progress, (p) => p > 0.95 ? "auto" : ("none" as any));
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}
-      style={{ position: "absolute", inset: 0, zIndex: 100, background: "#000",
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 100, background: "#000", opacity: useTransform(progress, [0.93, 0.95], [0, 1]), pointerEvents,
         display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
 
       {/* Background stars */}
@@ -36,15 +37,16 @@ export default function FinalePhase({ onComplete }: Props) {
       </div>
 
       {/* Earth using real image */}
-      <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 2 }}
-        style={{ position: "relative", width: "250px", height: "250px", marginBottom: "2.5rem" }}>
+      <motion.div
+        style={{ position: "relative", width: "250px", height: "250px", marginBottom: "2.5rem",
+          scale: useTransform(progress, [0, 0.8], [0.5, 1]) }}
+      >
         <motion.div animate={{ scale: [1, 1.03, 1] }}
           transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
           style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
             boxShadow: "0 0 60px rgba(70,130,230,0.35), 0 0 120px rgba(70,130,230,0.15)" }}>
           <Image src="/assets/moon_surface.png" alt="Earth" fill
-            style={{ objectFit: "cover", objectPosition: "center 20%",
+            style={{ objectFit: "cover", objectPosition: "center 20%", mixBlendMode: "screen",
               filter: "hue-rotate(180deg) saturate(1.5) brightness(1.2)" }} />
         </motion.div>
         {/* Atmosphere glow */}
@@ -55,7 +57,7 @@ export default function FinalePhase({ onComplete }: Props) {
 
       {/* Name input */}
       {!submitted ? (
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}>
+        <motion.div style={{ opacity: progress, y: useTransform(progress, [0, 1], [30, 0]) }}>
           <p style={{ fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.4em",
             color: "var(--accent)", marginBottom: "1.5rem", textTransform: "uppercase" }}>
             Görev Kaydı
@@ -74,7 +76,7 @@ export default function FinalePhase({ onComplete }: Props) {
               style={{ padding: "0.9rem 1.8rem", background: name.trim() ? "var(--accent)" : "#333",
                 border: "none", borderRadius: "8px", color: name.trim() ? "#000" : "#666",
                 fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.1em",
-                transition: "all 0.3s" }}>
+                transition: "all 0.3s", cursor: "pointer" }}>
               KAYDET
             </button>
           </div>

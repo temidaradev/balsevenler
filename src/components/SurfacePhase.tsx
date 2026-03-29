@@ -1,13 +1,12 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
 import Image from "next/image";
 
 const SURFACE_TEXT = "Ay'a dikilen ilk bayraklar Apollo'nun egzozundan dolayı yanıp kül oldu. Lakin ayak izleri hala orada. O gün Ay'a ulaşılabileceğini kanıtlamışken şimdi oraya konaklamaya gidiyoruz ;)";
 
 interface Props {
-  colonySteps: number[];
-  onColonyStep: (n: number) => void;
-  onFinale: () => void;
+  progress: MotionValue<number>;
 }
 
 function FlagSVG({ active }: { active: boolean }) {
@@ -17,7 +16,7 @@ function FlagSVG({ active }: { active: boolean }) {
       <line x1="20" y1="10" x2="20" y2="155" stroke={active ? "#d0d0d0" : "#555"} strokeWidth="3" />
       <circle cx="20" cy="8" r="3" fill={active ? "#ffae00" : "#555"} />
       {/* Flag */}
-      <motion.g initial={{ scaleX: active ? 0 : 0.2 }} animate={{ scaleX: 1 }}
+      <motion.g initial={{ scaleX: 0 }} animate={{ scaleX: active ? 1 : 0 }}
         transition={{ duration: 1, type: "spring" }} style={{ transformOrigin: "22px 30px" }}>
         <rect x="22" y="12" width="65" height="45" rx="3"
           fill={active ? "url(#flagGrad)" : "#333"} stroke={active ? "#ffae00" : "#444"} strokeWidth="1" />
@@ -48,7 +47,7 @@ function RoverSVG({ active }: { active: boolean }) {
       {/* Cabin */}
       <motion.rect x="50" y="10" width="45" height="22" rx="8"
         fill={active ? "#5a9ec8" : "#333"} stroke={active ? "#7ec8e3" : "#444"} strokeWidth="1"
-        initial={{ opacity: active ? 0 : 0.3 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} />
+        initial={{ opacity: 0 }} animate={{ opacity: active ? 1 : 0 }} transition={{ delay: 0.3 }} />
       {active && <>
         {/* Wheels */}
         <circle cx="45" cy="75" r="14" fill="#444" stroke="#666" strokeWidth="2" />
@@ -123,10 +122,22 @@ function ColonySVG({ active }: { active: boolean }) {
   );
 }
 
-export default function SurfacePhase({ colonySteps, onColonyStep, onFinale }: Props) {
+export default function SurfacePhase({ progress }: Props) {
+  const [colonySteps, setColonySteps] = useState<number[]>([]);
+
+  useMotionValueEvent(progress, "change", (latest) => {
+    const steps = [];
+    if (latest > 0.83) steps.push(1);
+    if (latest > 0.87) steps.push(2);
+    if (latest > 0.91) steps.push(3);
+    setColonySteps(steps);
+  });
+
+  const opacity = useTransform(progress, [0.78, 0.80, 0.95, 0.97], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.78 && p < 0.97 ? "auto" : ("none" as any));
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      style={{ position: "absolute", inset: 0, zIndex: 10 }}>
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 10, opacity, pointerEvents }}>
 
       {/* Moon surface - use real image as background */}
       <Image src="/assets/moon_surface.png" alt="Moon Surface" fill
@@ -150,7 +161,7 @@ export default function SurfacePhase({ colonySteps, onColonyStep, onFinale }: Pr
           display: "flex", gap: "4rem", alignItems: "flex-end", zIndex: 20 }}>
 
         {/* Flag */}
-        <div className="silhouette" onClick={() => !colonySteps.includes(1) && onColonyStep(1)}>
+        <div className="silhouette">
           <motion.div className="silhouette__shape" style={{ opacity: colonySteps.includes(1) ? 1 : 0.3 }}
             animate={colonySteps.includes(1) ? { opacity: 1 } : { opacity: [0.2, 0.45, 0.2] }}
             transition={colonySteps.includes(1) ? {} : { repeat: Infinity, duration: 2 }}>
@@ -160,42 +171,27 @@ export default function SurfacePhase({ colonySteps, onColonyStep, onFinale }: Pr
         </div>
 
         {/* Rover */}
-        <div className="silhouette"
-          onClick={() => colonySteps.includes(1) && !colonySteps.includes(2) && onColonyStep(2)}
-          style={{ cursor: colonySteps.includes(1) && !colonySteps.includes(2) ? "pointer" : "default" }}>
+        <div className="silhouette">
           <motion.div className="silhouette__shape"
             style={{ opacity: colonySteps.includes(2) ? 1 : colonySteps.includes(1) ? 0.3 : 0.1 }}
             animate={!colonySteps.includes(2) && colonySteps.includes(1) ? { opacity: [0.2, 0.45, 0.2] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}>
             <RoverSVG active={colonySteps.includes(2)} />
           </motion.div>
-          <p className="silhouette__label">ROVER</p>
+          <p className="silhouette__label">ROVER (AŞAĞI KAYDIR)</p>
         </div>
 
         {/* Colony */}
-        <div className="silhouette"
-          onClick={() => colonySteps.includes(2) && !colonySteps.includes(3) && onColonyStep(3)}
-          style={{ cursor: colonySteps.includes(2) && !colonySteps.includes(3) ? "pointer" : "default" }}>
+        <div className="silhouette">
           <motion.div className="silhouette__shape"
             style={{ opacity: colonySteps.includes(3) ? 1 : colonySteps.includes(2) ? 0.3 : 0.1 }}
             animate={!colonySteps.includes(3) && colonySteps.includes(2) ? { opacity: [0.2, 0.45, 0.2] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}>
             <ColonySVG active={colonySteps.includes(3)} />
           </motion.div>
-          <p className="silhouette__label">KOLONİ</p>
+          <p className="silhouette__label">KOLONİ (AŞAĞI KAYDIR)</p>
         </div>
       </motion.div>
-
-      {/* Finale button */}
-      <AnimatePresence>
-        {colonySteps.length >= 3 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            style={{ position: "absolute", bottom: "3%", left: "50%", transform: "translateX(-50%)", zIndex: 30 }}>
-            <button className="continue-btn" onClick={onFinale}>Görevi Tamamla →</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

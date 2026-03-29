@@ -1,5 +1,6 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence, useMotionValueEvent, MotionValue, useTransform } from "framer-motion";
 
 const TEXTS = [
   "Yapılan iş ne olursa olsun onun zorluğu sadece yapan bilir. 400.000 kişinin ortak emeği olan Saturn V roketi o güne kadar üretilmiş en güçlü makineydi ve her saniye 13 ton yakıt tüketiyordu.",
@@ -17,16 +18,34 @@ const BG_STARS = Array.from({ length: 60 }, (_, i) => ({
 }));
 
 interface Props {
-  detached: number[];
-  onDetach: (n: number) => void;
-  glitch: boolean;
-  onDone: () => void;
+  progress: MotionValue<number>;
 }
 
-export default function TankDetachPhase({ detached, onDetach, glitch, onDone }: Props) {
+export default function TankDetachPhase({ progress }: Props) {
+  const [detached, setDetached] = useState<number[]>([]);
+  const [glitch, setGlitch] = useState(false);
+
+  // Map progress (0.35 to 0.50) to detachment states
+  useMotionValueEvent(progress, "change", (latest) => {
+    const newDetached = [];
+    if (latest > 0.38) newDetached.push(1);
+    if (latest > 0.43) newDetached.push(2);
+    if (latest > 0.48) newDetached.push(3);
+    
+    // Trigger glitch effect on transition
+    if (newDetached.length > detached.length) {
+      setGlitch(true);
+      setTimeout(() => setGlitch(false), 300);
+    }
+    
+    setDetached(newDetached);
+  });
+
+  const opacity = useTransform(progress, [0.33, 0.35, 0.50, 0.52], [0, 1, 1, 0]);
+  const pointerEvents = useTransform(progress, (p) => p > 0.33 && p < 0.52 ? "auto" : ("none" as any));
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      style={{ position: "absolute", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "#000" }}>
+    <motion.div style={{ position: "absolute", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "#000", opacity, pointerEvents }}>
       
       {glitch && <div className="glitch-overlay" />}
 
@@ -47,14 +66,28 @@ export default function TankDetachPhase({ detached, onDetach, glitch, onDone }: 
       </motion.p>
 
       <div style={{ display: "flex", gap: "2.5rem", zIndex: 50 }}>
-        {[1, 2, 3].map(num => (
-          <motion.button key={`detach-${num}`} whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }}
-            className={`detach-btn ${detached.includes(num) ? "detach-btn--done" : ""}`}
-            onClick={() => onDetach(num)} disabled={detached.includes(num)}>
-            <span style={{ fontSize: "1.4rem" }}>{detached.includes(num) ? "✓" : num}</span>
-            <span>{detached.includes(num) ? "AYRILDI" : "AYIR"}</span>
-          </motion.button>
-        ))}
+        {[1, 2, 3].map(num => {
+          const isDetached = detached.includes(num);
+          let yOffset = "0px";
+          let scale = 1;
+          let opacityStyle = 1;
+          if (isDetached) {
+            yOffset = "100px";
+            scale = 0.8;
+            opacityStyle = 0.5;
+          }
+
+          return (
+            <motion.div key={`detach-${num}`} 
+              animate={{ y: yOffset, scale: scale, opacity: opacityStyle }}
+              transition={{ type: "spring", stiffness: 100 }}
+              className={`detach-btn ${isDetached ? "detach-btn--done" : ""}`}
+              style={{ pointerEvents: "none" }}> {/* Disabled manual clicks */}
+              <span style={{ fontSize: "1.4rem" }}>{isDetached ? "✓" : num}</span>
+              <span>{isDetached ? "AYRILDI" : "AYRILIYOR..."}</span>
+            </motion.div>
+          );
+        })}
       </div>
 
       <div style={{ marginTop: "3rem", width: "560px", minHeight: "120px" }}>
@@ -82,7 +115,7 @@ export default function TankDetachPhase({ detached, onDetach, glitch, onDone }: 
               style={{ fontFamily: "var(--font-display)", color: "var(--accent2)", letterSpacing: "0.8em", fontSize: "1.8rem", marginBottom: "2rem" }}>
               DONE
             </motion.h2>
-            <button className="continue-btn" onClick={onDone}>Devam Et →</button>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", fontFamily: "var(--font-display)", letterSpacing: "0.2em" }}>İlerlemek için kaydır</p>
           </motion.div>
         )}
       </AnimatePresence>
