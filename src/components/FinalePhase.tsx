@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, MotionValue, useTransform, useMotionValueEvent } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,22 @@ export default function FinalePhase({ progress, data }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const savedNickname = localStorage.getItem("balsevenler_nickname");
+    if (savedNickname) {
+      setName(savedNickname);
+      setSubmitted(true);
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (name.trim()) {
+      localStorage.setItem("balsevenler_nickname", name.trim());
+      setSubmitted(true);
+    }
+  };
+
   const [selectedField, setSelectedField] = useState<string | null>(null);
 
   const [isVisible, setIsVisible] = useState(false);
@@ -76,14 +92,14 @@ export default function FinalePhase({ progress, data }: Props) {
           <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
             <input value={name} onChange={e => setName(e.target.value)}
               placeholder="Adınızı girin..."
-              onKeyDown={e => { if (e.key === "Enter" && name.trim()) setSubmitted(true); }}
+              onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
               style={{ padding: "0.9rem 1.5rem", background: "rgba(255,255,255,0.05)",
                 border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff",
                 fontFamily: "var(--font-mono)", fontSize: "0.9rem", width: "300px", outline: "none",
                 transition: "border-color 0.3s" }}
               onFocus={e => e.target.style.borderColor = "var(--accent)"}
               onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.15)"} />
-            <button onClick={() => name.trim() && setSubmitted(true)} disabled={!name.trim()}
+            <button onClick={handleSave} disabled={!name.trim()}
               style={{ padding: "0.9rem 1.8rem", background: name.trim() ? "var(--accent)" : "#333",
                 border: "none", borderRadius: "8px", color: name.trim() ? "#000" : "#666",
                 fontFamily: "var(--font-display)", fontSize: "0.7rem", letterSpacing: "0.1em",

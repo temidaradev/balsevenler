@@ -10,6 +10,7 @@ import FinalePhase from "@/components/FinalePhase";
 import LaunchPhase from "@/components/LaunchPhase";
 import DebrisPhase from "@/components/DebrisPhase";
 import { PhaseContent, CustomPhaseItem, DevUpdate } from "@/app/admin/actions";
+import { useLenis } from "lenis/react";
 
 function SceneCoasting({ progress, stars, data }: { progress: MotionValue<number>; stars: Star[]; data: PhaseContent["hyperspace"] }) {
   // Visible: 0.12 -> 0.26
@@ -159,31 +160,49 @@ function CustomScrollItem({ progress, item }: { progress: MotionValue<number>; i
 export default function SpaceJourneyClient({ phasesData, articles = [] }: { phasesData: PhaseContent; articles?: DevUpdate[] }) {
   const [mounted, setMounted] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [isJumping, setIsJumping] = useState(false);
   const [stars, setStars] = useState<Star[]>([]);
   const [hudOpen, setHudOpen] = useState(false);
+  const lenis = useLenis();
 
   useEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
+    const savedNickname = localStorage.getItem("balsevenler_nickname");
+    
+    if (savedNickname) {
+      setIsJumping(true);
+      if (lenis) {
+        lenis.scrollTo("bottom", { immediate: true });
+      } else {
+        window.scrollTo({ top: document.body.scrollHeight, left: 0, behavior: "instant" });
+      }
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
     
     const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
+      if (savedNickname && !lenis) {
+        window.scrollTo(0, document.body.scrollHeight);
+      } else if (!savedNickname) {
+        window.scrollTo(0, 0);
+      }
       setMounted(true);
       setStars(generateStars(300));
     }, 150);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [lenis]);
 
-  // After mount, wait for the spring to settle at 0 before showing phases
+  // Only set ready after mount and potential jump settling
   useEffect(() => {
     if (mounted) {
-      const readyTimer = setTimeout(() => setIsReady(true), 400);
+      const readyTimer = setTimeout(() => setIsReady(true), isJumping ? 800 : 400); 
       return () => clearTimeout(readyTimer);
     }
-  }, [mounted]);
+  }, [mounted, isJumping]);
 
   // Smoothed scroll progress with spring for premium feel
   const { scrollYProgress } = useScroll();
@@ -196,7 +215,12 @@ export default function SpaceJourneyClient({ phasesData, articles = [] }: { phas
   if (!isReady) return <div style={{ width: "100%", height: "100vh", background: "#000" }} />;
 
   return (
-    <div style={{ width: "100%", height: "20000vh", background: "#000", fontFamily: "var(--font-inter)", position: "relative" }}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2, ease: "easeOut" }}
+      style={{ width: "100%", height: "20000vh", background: "#000", fontFamily: "var(--font-inter)", position: "relative" }}
+    >
       
       {/* GLOBAL SCROLL CONTENT LAYER - FIXED TO VIEWPORT */}
       <div style={{ position: "fixed", inset: 0, zIndex: 10, overflow: "hidden" }}>
@@ -254,9 +278,30 @@ export default function SpaceJourneyClient({ phasesData, articles = [] }: { phas
           <CustomScrollItem key={item.id} progress={smoothProgress} item={item} />
         ))}
 
-        {/* HUD Mission Log Button */}
-        {articles.length > 0 && (
-          <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", zIndex: 9999 }}>
+        {/* HUD Mission Log & Scroll Up Buttons */}
+        <div style={{ position: "absolute", top: "1.5rem", right: "1.5rem", zIndex: 9999, display: "flex", gap: "1rem" }}>
+          {mounted && localStorage.getItem("balsevenler_nickname") && (
+            <motion.button
+              onClick={() => lenis?.scrollTo(0)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                padding: "0.7rem 1.4rem",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "10px", color: "rgba(255,255,255,0.6)",
+                fontFamily: "var(--font-display)", fontSize: "0.6rem",
+                letterSpacing: "0.2em", textTransform: "uppercase",
+                cursor: "pointer", transition: "all 0.3s",
+                backdropFilter: "blur(15px)",
+              }}
+            >
+              ⬆ BAŞA DÖN
+            </motion.button>
+          )}
+
+          {articles.length > 0 && (
+            <div style={{ position: "relative" }}>
             <motion.button
               onClick={() => setHudOpen(!hudOpen)}
               whileHover={{ scale: 1.05 }}
@@ -332,8 +377,9 @@ export default function SpaceJourneyClient({ phasesData, articles = [] }: { phas
             </AnimatePresence>
           </div>
         )}
+      </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 }
